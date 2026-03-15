@@ -2,216 +2,208 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TORU PRESTIGE 2026</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TORU MOBILE PRESTIGE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         :root {
             --primary: #ff9a9e;
-            --dark: #2d2424;
-            --glass: rgba(255, 255, 255, 0.1);
+            --bg: #1a1a1a;
+            --glass: rgba(255, 255, 255, 0.08);
         }
 
-        body, html {
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
             margin: 0; padding: 0;
-            background: #000; /* 초기 로딩 대비 */
+            background-color: var(--bg);
             color: #fff;
             font-family: 'Pretendard', sans-serif;
-            overflow: hidden; /* 스크롤 방지 (3D 캔버스 최적화) */
-        }
-
-        /* 배경 3D 캔버스 */
-        #canvas-container {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 1;
-        }
-
-        /* 레이아웃 레이어 */
-        #ui-layer {
-            position: relative;
-            z-index: 10;
-            height: 100vh;
+            overflow: hidden;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            pointer-events: none; /* 클릭 이벤트 통과 */
+            height: 100vh;
         }
 
-        .glass-panel {
+        /* 배경 그라데이션 (GPU 가속 활용) */
+        .bg-gradient {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #2d2424 0%, #000 100%);
+            z-index: -1;
+        }
+
+        .blob {
+            position: absolute;
+            width: 300px; height: 300px;
+            background: var(--primary);
+            filter: blur(80px);
+            border-radius: 50%;
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        /* 메인 인터페이스 */
+        .container {
+            width: 90%;
+            max-width: 400px;
+            perspective: 2000px;
+        }
+
+        .glass-card {
             background: var(--glass);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 60px;
-            border-radius: 50px;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 40px;
+            padding: 40px 20px;
             text-align: center;
-            pointer-events: auto;
-            transform: perspective(1000px);
-            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            box-shadow: 0 25px 45px rgba(0,0,0,0.3);
+            transform-style: preserve-3d;
+            will-change: transform;
         }
 
-        .bunny-avatar {
-            width: 250px;
-            height: 250px;
-            margin-bottom: 30px;
-            cursor: pointer;
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .bunny-wrap {
+            position: relative;
+            transform-style: preserve-3d;
+            margin-bottom: 20px;
         }
 
-        .bunny-avatar:hover {
-            transform: scale(1.1) rotate(10deg);
+        .bunny-img {
+            width: 180px;
+            height: 180px;
+            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.4));
+            transform: translateZ(50px); /* 튀어나오는 효과 */
         }
 
         h1 {
-            font-size: 5rem;
-            margin: 0;
+            font-size: 2.8rem;
             font-weight: 900;
-            text-transform: uppercase;
-            background: linear-gradient(45deg, #fff, var(--primary));
+            margin: 10px 0;
+            background: linear-gradient(135deg, #fff 30%, var(--primary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 5px 15px rgba(255,154,158,0.5));
+            transform: translateZ(30px);
         }
 
-        .status-bar {
+        .info-group {
             display: flex;
-            gap: 20px;
-            margin-top: 30px;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            transform: translateZ(20px);
         }
 
-        .status-tag {
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 0.9rem;
+        .tag {
+            font-size: 0.7rem;
+            padding: 5px 12px;
             background: rgba(255,255,255,0.1);
-            border: 1px solid var(--primary);
+            border-radius: 10px;
+            border: 0.5px solid var(--primary);
         }
 
-        .btn-action {
-            margin-top: 50px;
-            padding: 20px 80px;
+        .btn-main {
+            width: 100%;
+            padding: 18px;
+            border-radius: 20px;
+            border: none;
             background: #fff;
             color: #000;
-            border: none;
-            border-radius: 100px;
             font-weight: 800;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: 0.4s;
-            text-transform: uppercase;
+            font-size: 1.1rem;
+            margin-top: 20px;
+            transform: translateZ(40px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
-        .btn-action:hover {
+        /* 모바일 터치 피드백 */
+        .btn-main:active {
+            transform: translateZ(20px) scale(0.95);
             background: var(--primary);
             color: #fff;
-            letter-spacing: 5px;
-            box-shadow: 0 0 30px var(--primary);
-        }
-
-        /* 커스텀 노이즈 필터 (필름 느낌) */
-        .overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: url('https://grainy-gradients.vercel.app/noise.svg');
-            opacity: 0.05;
-            pointer-events: none;
-            z-index: 999;
         }
     </style>
 </head>
 <body>
 
-    <div class="overlay"></div>
-    <div id="canvas-container"></div>
+    <div class="bg-gradient"></div>
+    <div class="blob" id="blob1" style="top: -10%; left: -10%;"></div>
+    <div class="blob" id="blob2" style="bottom: -10%; right: -10%;"></div>
 
-    <main id="ui-layer">
-        <div class="glass-panel" id="main-panel">
-            <img src="bunny.png" class="bunny-avatar" id="toru-hero" alt="TORU">
-            <h1 id="title">TORU WORLD</h1>
-            <div class="status-bar">
-                <div class="status-tag">CORE: SOFTNESS 100%</div>
-                <div class="status-tag">OWNER: IM CHAERIN</div>
-                <div class="status-tag">VER: 2026.02.13</div>
+    <div class="container">
+        <div class="glass-card" id="card">
+            <div class="bunny-wrap">
+                <img src="bunny.png" class="bunny-img" alt="TORU">
             </div>
-            <button class="btn-action" onclick="deepInteraction()">Initialize Experience</button>
+            <h1>TORU WORLD</h1>
+            <div class="info-group">
+                <div class="tag">FEEL: PREMIUM SOFT</div>
+                <div class="tag">VER: 2.0.26</div>
+            </div>
+            <button class="btn-action btn-main" onclick="triggerEffect()">SYSTEM START</button>
         </div>
-    </main>
+    </div>
 
     <script>
-        // 1. Three.js Engine 세팅 (15년 차의 배경 처리)
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        container.appendChild(renderer.domElement);
+        const card = document.getElementById('card');
+        const blob1 = document.getElementById('blob1');
+        const blob2 = document.getElementById('blob2');
 
-        // 배경 파티클 생성 (심해/우주 느낌의 입자)
-        const geometry = new THREE.BufferGeometry();
-        const vertices = [];
-        for (let i = 0; i < 5000; i++) {
-            vertices.push(THREE.MathUtils.randFloatSpread(2000)); // x
-            vertices.push(THREE.MathUtils.randFloatSpread(2000)); // y
-            vertices.push(THREE.MathUtils.randFloatSpread(2000)); // z
-        }
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-        const particles = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0xff9a9e, size: 2 }));
-        scene.add(particles);
+        // 모바일 가속도계/터치 이벤트 (15년 차의 최적화 로직)
+        // 데스크톱 마우스와 모바일 터치를 모두 대응하는 하이브리드 로직
+        const handleMove = (e) => {
+            let x, y;
+            if (e.type === 'touchmove') {
+                x = e.touches[0].clientX;
+                y = e.touches[0].clientY;
+            } else {
+                x = e.clientX;
+                y = e.clientY;
+            }
 
-        camera.position.z = 500;
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            const moveX = (centerX - x) / 10;
+            const moveY = (centerY - y) / 15;
 
-        // 2. 애니메이션 루프 (프레임 최적화)
-        function animate() {
-            requestAnimationFrame(animate);
-            particles.rotation.y += 0.001;
-            particles.rotation.x += 0.0005;
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        // 3. 마우스 패러랙스 (심화)
-        document.addEventListener('mousemove', (e) => {
-            const mouseX = (e.clientX - window.innerWidth / 2) / 100;
-            const mouseY = (e.clientY - window.innerHeight / 2) / 100;
-            
-            gsap.to(camera.position, { x: mouseX * 2, y: -mouseY * 2, duration: 1 });
-            gsap.to("#main-panel", {
-                rotateY: mouseX * 5,
-                rotateX: -mouseY * 5,
-                duration: 0.5
+            gsap.to(card, {
+                rotateY: moveX,
+                rotateX: -moveY,
+                duration: 0.5,
+                ease: "power2.out"
             });
-        });
 
-        // 4. 입장 인터랙션 (GSAP Sequence)
-        function deepInteraction() {
+            // 배경 블롭(Blob) 연동
+            gsap.to(blob1, { x: moveX * 2, y: moveY * 2, duration: 1 });
+            gsap.to(blob2, { x: -moveX * 2, y: -moveY * 2, duration: 1 });
+        };
+
+        document.addEventListener('mousemove', handleMove);
+        document.addEventListener('touchmove', handleMove);
+
+        // 터치 종료 시 원복
+        const resetCard = () => {
+            gsap.to(card, { rotateX: 0, rotateY: 0, duration: 1, ease: "elastic.out(1, 0.5)" });
+        };
+        document.addEventListener('touchend', resetCard);
+        document.addEventListener('mouseleave', resetCard);
+
+        function triggerEffect() {
+            // Haptic Feedback (진동) - 안드로이드 등 지원 브라우저 한정
+            if (navigator.vibrate) navigator.vibrate(50);
+
             const tl = gsap.timeline();
-            
-            // 버튼 클릭 시 제목 분해 애니메이션
-            tl.to("#title", { y: -50, opacity: 0, duration: 0.5, ease: "power4.in" })
-              .to(".status-tag", { scale: 0, stagger: 0.1, duration: 0.3 }, "-=0.3")
-              .to("#main-panel", { 
-                  scale: 0.8, 
-                  background: "rgba(255,154,158,0.5)", 
-                  duration: 0.5,
-                  borderRadius: "200px" 
-              })
-              .to(camera.position, { z: 100, duration: 2, ease: "expo.inOut" })
+            tl.to(".bunny-img", { scale: 1.2, rotation: 360, duration: 0.6, ease: "back.out(1.7)" })
+              .to(".glass-card", { y: -20, duration: 0.2, yoyo: true, repeat: 1 })
               .call(() => {
-                  alert("TORU SYSTEM ACTIVATED.\n초고감도 부드러움 모드에 진입했습니다.");
-                  location.reload(); // 리셋 또는 다음 섹션 이동
+                  alert("TORU MOBILE SYSTEM ONLINE");
               });
         }
-
-        // 창 크기 조절 대응
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
     </script>
 </body>
 </html>
