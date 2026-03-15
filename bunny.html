@@ -3,207 +3,337 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TORU MOBILE PRESTIGE</title>
+    <title>토끼2 랜드 | 임채린 & 토루</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         :root {
             --primary: #ff9a9e;
-            --bg: #1a1a1a;
-            --glass: rgba(255, 255, 255, 0.08);
+            --secondary: #fad0c4;
+            --text: #5d4037;
+            --glass: rgba(255, 255, 255, 0.7);
         }
 
-        * {
-            -webkit-tap-highlight-color: transparent;
-            box-sizing: border-box;
-            user-select: none;
-        }
-
-        body {
+        body, html {
             margin: 0; padding: 0;
-            background-color: var(--bg);
-            color: #fff;
-            font-family: 'Pretendard', sans-serif;
-            overflow: hidden;
+            background: #fdf5e6;
+            font-family: 'Apple SD Gothic Neo', sans-serif;
+            overflow-x: hidden;
+            color: var(--text);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 1. 하트 파티클 캔버스 배경 (15년 차의 성능 최적화) */
+        #heart-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none; /* 클릭 이벤트 통과 */
+            opacity: 0.6;
+        }
+
+        /* 2. 메인 컨텐츠 레이어 */
+        main {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            padding: 20px;
         }
 
-        /* 배경 그라데이션 (GPU 가속 활용) */
-        .bg-gradient {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, #2d2424 0%, #000 100%);
-            z-index: -1;
-        }
-
-        .blob {
-            position: absolute;
-            width: 300px; height: 300px;
-            background: var(--primary);
-            filter: blur(80px);
-            border-radius: 50%;
-            opacity: 0.3;
-            z-index: -1;
-        }
-
-        /* 메인 인터페이스 */
-        .container {
-            width: 90%;
-            max-width: 400px;
-            perspective: 2000px;
-        }
-
-        .glass-card {
+        .hero-card {
             background: var(--glass);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 40px;
-            padding: 40px 20px;
+            padding: 40px 30px;
             text-align: center;
-            box-shadow: 0 25px 45px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.4);
             transform-style: preserve-3d;
-            will-change: transform;
+            perspective: 1000px;
         }
 
-        .bunny-wrap {
+        .bunny-visual {
             position: relative;
             transform-style: preserve-3d;
             margin-bottom: 20px;
         }
 
-        .bunny-img {
+        .toru-img {
             width: 180px;
             height: 180px;
-            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.4));
-            transform: translateZ(50px); /* 튀어나오는 효과 */
+            object-fit: contain;
+            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.15));
+            transform: translateZ(50px); /* 튀어나오는 입체감 */
         }
 
-        h1 {
-            font-size: 2.8rem;
-            font-weight: 900;
-            margin: 10px 0;
-            background: linear-gradient(135deg, #fff 30%, var(--primary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .ring {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) translateZ(20px);
+            width: 220px; height: 220px;
+            border: 2px dashed rgba(255,154,158,0.5);
+            border-radius: 50%;
+            animation: rotateRing 10s linear infinite;
+        }
+
+        @keyframes rotateRing {
+            0% { transform: translate(-50%, -50%) translateZ(20px) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) translateZ(20px) rotate(360deg); }
+        }
+
+        .owner-tag {
+            display: inline-block;
+            padding: 6px 18px;
+            background: #8d6e63;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 15px;
             transform: translateZ(30px);
         }
 
-        .info-group {
+        h1 {
+            font-size: 2.6rem;
+            margin: 10px 0;
+            color: #8d6e63;
+            font-weight: 900;
+            transform: translateZ(40px);
+        }
+
+        .main-desc {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: #6d4c41;
+            margin-bottom: 30px;
+            transform: translateZ(10px);
+        }
+
+        /* 3. 입장 후 아카이브 섹션 (Hidden) */
+        #archive-view {
+            display: none;
+            opacity: 0;
+            padding: 60px 20px;
+            height: 100vh;
+            overflow-y: auto;
+            position: relative;
+            z-index: 20;
+        }
+
+        .archive-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .archive-header h2 { font-size: 3rem; color: #8d6e63; margin: 0; }
+
+        /* 4. 갤러리 섹션 (모바일 터치 스와이프 최적화) */
+        .gallery-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            overflow: hidden;
+            border-radius: 25px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: white;
+        }
+
+        .gallery-wrapper {
+            display: flex;
+            height: 100%;
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .gallery-item {
+            flex: 0 0 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            color: #999;
+            background: #fafafa;
+        }
+
+        /* 실제 이미지가 있다면 여기에 background-image를 넣으세요 */
+        .gallery-item:nth-child(1) { background: #fff1f1; color: var(--primary); }
+        .gallery-item:nth-child(2) { background: #fdf5e6; color: #8d6e63; }
+        .gallery-item:nth-child(3) { background: #fff0f3; color: var(--text); }
+
+        .gallery-nav {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
             gap: 10px;
-            margin: 20px 0;
-            transform: translateZ(20px);
         }
 
-        .tag {
-            font-size: 0.7rem;
-            padding: 5px 12px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            border: 0.5px solid var(--primary);
+        .nav-dot {
+            width: 10px; height: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50%;
+            cursor: pointer;
         }
 
-        .btn-main {
+        .nav-dot.active { background: var(--primary); }
+
+        .btn-enter, .btn-back {
             width: 100%;
-            padding: 18px;
-            border-radius: 20px;
+            padding: 22px;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
             border: none;
-            background: #fff;
-            color: #000;
+            border-radius: 20px;
+            color: white;
             font-weight: 800;
-            font-size: 1.1rem;
-            margin-top: 20px;
-            transform: translateZ(40px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            font-size: 1.3rem;
+            box-shadow: 0 15px 30px rgba(255,154,158,0.4);
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
         }
 
-        /* 모바일 터치 피드백 */
-        .btn-main:active {
-            transform: translateZ(20px) scale(0.95);
-            background: var(--primary);
-            color: #fff;
+        .btn-enter:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(255,154,158,0.5);
         }
+
+        .btn-back { background: #8d6e63; margin-top: 40px; font-size: 1rem; padding: 15px; }
+
     </style>
 </head>
 <body>
 
-    <div class="bg-gradient"></div>
-    <div class="blob" id="blob1" style="top: -10%; left: -10%;"></div>
-    <div class="blob" id="blob2" style="bottom: -10%; right: -10%;"></div>
+    <canvas id="heart-canvas"></canvas>
 
-    <div class="container">
-        <div class="glass-card" id="card">
-            <div class="bunny-wrap">
-                <img src="bunny.png" class="bunny-img" alt="TORU">
+    <main id="main-view">
+        <div class="hero-card" id="card">
+            <div class="bunny-visual">
+                <div class="ring"></div>
+                <img src="bunny.png" class="toru-img" alt="토루">
             </div>
-            <h1>TORU WORLD</h1>
-            <div class="info-group">
-                <div class="tag">FEEL: PREMIUM SOFT</div>
-                <div class="tag">VER: 2.0.26</div>
-            </div>
-            <button class="btn-action btn-main" onclick="triggerEffect()">SYSTEM START</button>
+            <div class="owner-tag">IM CHAERIN X TORU</div>
+            <h1>토끼2 랜드</h1>
+            <p class="main-desc">
+                제 애착인형 <strong>토루</strong>의<br>
+                공식 아카이브에 오신 것을 환영합니다.
+            </p>
+            <button class="btn-enter" onclick="enterArchive()">Initialize Archive</button>
         </div>
-    </div>
+    </main>
+
+    <section id="archive-view">
+        <div class="archive-header">
+            <div class="owner-tag">OWNER: 임채린</div>
+            <h2>ARCHIVE</h2>
+        </div>
+
+        <div class="gallery-container">
+            <div class="gallery-wrapper" id="gallery-wrapper">
+                <div class="gallery-item">[ 토루 사진 1 ]</div>
+                <div class="gallery-item">[ 토루 사진 2 ]</div>
+                <div class="gallery-item">[ 토루 사진 3 ]</div>
+            </div>
+            <div class="gallery-nav" id="gallery-nav">
+                <div class="nav-dot active" onclick="gotoSlide(0)"></div>
+                <div class="nav-dot" onclick="gotoSlide(1)"></div>
+                <div class="nav-dot" onclick="gotoSlide(2)"></div>
+            </div>
+        </div>
+
+        <button class="btn-back" onclick="location.reload()">처음으로</button>
+    </section>
 
     <script>
-        const card = document.getElementById('card');
-        const blob1 = document.getElementById('blob1');
-        const blob2 = document.getElementById('blob2');
+        // 1. 하트 파티클 시스템 (Canvas API)
+        const canvas = document.getElementById('heart-canvas');
+        const ctx = canvas.getContext('2d');
+        let hearts = [];
 
-        // 모바일 가속도계/터치 이벤트 (15년 차의 최적화 로직)
-        // 데스크톱 마우스와 모바일 터치를 모두 대응하는 하이브리드 로직
-        const handleMove = (e) => {
-            let x, y;
-            if (e.type === 'touchmove') {
-                x = e.touches[0].clientX;
-                y = e.touches[0].clientY;
-            } else {
-                x = e.clientX;
-                y = e.clientY;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        class Heart {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + Math.random() * 100;
+                this.size = Math.random() * 8 + 5;
+                this.speedY = Math.random() * 1 + 0.5;
+                this.speedX = Math.random() * 0.4 - 0.2;
+                this.opacity = Math.random() * 0.5 + 0.5;
             }
-
-            const centerX = window.innerWidth / 2;
-            const centerY = window.innerHeight / 2;
-            const moveX = (centerX - x) / 10;
-            const moveY = (centerY - y) / 15;
-
-            gsap.to(card, {
-                rotateY: moveX,
-                rotateX: -moveY,
-                duration: 0.5,
-                ease: "power2.out"
-            });
-
-            // 배경 블롭(Blob) 연동
-            gsap.to(blob1, { x: moveX * 2, y: moveY * 2, duration: 1 });
-            gsap.to(blob2, { x: -moveX * 2, y: -moveY * 2, duration: 1 });
-        };
-
-        document.addEventListener('mousemove', handleMove);
-        document.addEventListener('touchmove', handleMove);
-
-        // 터치 종료 시 원복
-        const resetCard = () => {
-            gsap.to(card, { rotateX: 0, rotateY: 0, duration: 1, ease: "elastic.out(1, 0.5)" });
-        };
-        document.addEventListener('touchend', resetCard);
-        document.addEventListener('mouseleave', resetCard);
-
-        function triggerEffect() {
-            // Haptic Feedback (진동) - 안드로이드 등 지원 브라우저 한정
-            if (navigator.vibrate) navigator.vibrate(50);
-
-            const tl = gsap.timeline();
-            tl.to(".bunny-img", { scale: 1.2, rotation: 360, duration: 0.6, ease: "back.out(1.7)" })
-              .to(".glass-card", { y: -20, duration: 0.2, yoyo: true, repeat: 1 })
-              .call(() => {
-                  alert("TORU MOBILE SYSTEM ONLINE");
-              });
+            update() {
+                this.y -= this.speedY;
+                this.x += this.speedX;
+                if (this.opacity > 0.01) this.opacity -= 0.002;
+            }
+            draw() {
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = '#ff9a9e';
+                ctx.beginPath();
+                // 고급 하트 그리기 수학 공식
+                const topCurveHeight = this.size * 0.3;
+                ctx.moveTo(this.x, this.y + topCurveHeight);
+                ctx.bezierCurveTo(this.x, this.y, this.x - this.size / 2, this.y, this.x - this.size / 2, this.y + topCurveHeight);
+                ctx.bezierCurveTo(this.x - this.size / 2, this.y + (this.size + topCurveHeight) / 2, this.x, this.y + (this.size + topCurveHeight) / 2, this.x, this.y + this.size);
+                ctx.bezierCurveTo(this.x, this.y + (this.size + topCurveHeight) / 2, this.x + this.size / 2, this.y + (this.size + topCurveHeight) / 2, this.x + this.size / 2, this.y + topCurveHeight);
+                ctx.bezierCurveTo(this.x + this.size / 2, this.y, this.x, this.y, this.x, this.y + topCurveHeight);
+                ctx.fill();
+            }
         }
+
+        function animateHearts() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (Math.random() < 0.1) hearts.push(new Heart()); // 확률적으로 새 하트 생성
+            for (let i = 0; i < hearts.length; i++) {
+                hearts[i].update();
+                hearts[i].draw();
+                if (hearts[i].y < -10 || hearts[i].opacity <= 0.01) { hearts.splice(i, 1); i--; } // 화면 밖/소멸 하트 제거
+            }
+            requestAnimationFrame(animateHearts);
+        }
+        animateHearts();
+
+        // 2. 갤러리 시스템 (GSAP 연동)
+        const wrapper = document.getElementById('gallery-wrapper');
+        const dots = document.querySelectorAll('.nav-dot');
+        let currentSlide = 0;
+
+        function gotoSlide(n) {
+            currentSlide = n;
+            gsap.to(wrapper, { x: `${-currentSlide * 100}%`, duration: 0.6, ease: "power2.inOut" });
+            dots.forEach((dot, i) => dot.classList.toggle('active', i === currentSlide));
+        }
+
+        // 3. 페이지 전환 시스템 (Ultimate UX)
+        function enterArchive() {
+            const tl = gsap.timeline();
+            tl.to("#main-view", { opacity: 0, scale: 1.2, duration: 0.8, ease: "power4.in" })
+              .set("#main-view", { display: "none" })
+              .set("#archive-view", { display: "block" })
+              .to("#archive-view", { opacity: 1, duration: 0.5 })
+              .from(".archive-header h2", { y: -50, opacity: 0, duration: 0.8, ease: "back.out(1.7)" })
+              .from(".gallery-container", { scale: 0.8, opacity: 0, duration: 0.8 }, "-=0.5");
+        }
+
+        // 4. 모바일 기울기 패러랙스 (고급UX)
+        const card = document.getElementById('card');
+        document.addEventListener('mousemove', (e) => {
+            const x = (window.innerWidth / 2 - e.clientX) / 20;
+            const y = (window.innerHeight / 2 - e.clientY) / 30;
+            gsap.to(card, { rotateY: x, rotateX: -y, duration: 0.5 });
+        });
+        
+        // 리사이즈 대응
+        window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+
     </script>
 </body>
 </html>
