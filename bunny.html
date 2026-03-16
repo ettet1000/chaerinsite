@@ -9,148 +9,87 @@
         :root {
             --primary: #ff9a9e;
             --text: #5d4037;
-            --glass: rgba(255, 255, 255, 0.75);
+            --glass: rgba(255, 255, 255, 0.8);
         }
 
         body, html {
             margin: 0; padding: 0;
             background: #fdf5e6;
             font-family: 'Apple SD Gothic Neo', sans-serif;
-            overflow-x: hidden;
             color: var(--text);
             -webkit-tap-highlight-color: transparent;
         }
 
-        #heart-canvas {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 1;
-            pointer-events: none;
-            opacity: 0.7;
+        #heart-canvas { position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none; opacity: 0.6; }
+
+        /* 메인 및 아카이브 공통 레이아웃 */
+        #main-view, #archive-view { position: relative; z-index: 10; padding: 20px; max-width: 500px; margin: 0 auto; }
+        #archive-view { display: none; opacity: 0; }
+
+        .hero-card, .video-card, .list-card {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border-radius: 30px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.3);
         }
 
-        main {
-            position: relative;
-            z-index: 10;
-            min-height: 100vh;
+        /* 텍스트 목록 스타일 */
+        .txt-list { list-style: none; padding: 0; margin: 0; }
+        .txt-item {
+            padding: 15px;
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 10px;
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .txt-item:active { transform: scale(0.98); background: var(--primary); color: white; }
+
+        /* 텍스트 뷰어 모달 */
+        #text-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            display: none;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            box-sizing: border-box;
         }
-
-        /* 인트로 카드 */
-        .hero-card {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 40px;
-            padding: 40px 30px;
-            text-align: center;
+        .modal-content {
+            background: #fff;
             width: 100%;
-            max-width: 380px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.4);
-        }
-
-        .toru-img-main {
-            width: 160px; height: 160px;
-            object-fit: contain;
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
-            margin-bottom: 20px;
-        }
-
-        /* 아카이브 뷰 (상세보기) */
-        #archive-view {
-            display: none;
-            opacity: 0;
-            padding: 40px 20px;
+            max-height: 80vh;
+            border-radius: 25px;
+            padding: 30px;
+            overflow-y: auto;
             position: relative;
-            z-index: 20;
-            max-width: 500px;
-            margin: 0 auto;
+            white-space: pre-wrap; /* 줄바꿈 유지 */
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+        .close-modal {
+            position: sticky; top: -10px; float: right;
+            background: var(--primary); color: white;
+            border: none; padding: 10px 15px; border-radius: 12px;
+            font-weight: bold;
         }
 
-        .section-title {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        /* 갤러리 레이아웃 */
-        .gallery-container {
-            width: 100%;
-            height: 300px;
-            background: white;
-            border-radius: 30px;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            margin-bottom: 25px;
-        }
-
-        .gallery-wrapper {
-            display: flex;
-            height: 100%;
-            width: 300%; /* 사진 3장 기준 */
-        }
-
-        .gallery-item {
-            width: 100.333%;
-            height: 100%;
-        }
-
-        .gallery-item img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-        }
-
-        /* 비디오 카드 */
-        .video-card {
-            background: white;
-            border-radius: 30px;
-            padding: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            margin-bottom: 30px;
-        }
-
-        video {
-            width: 100%;
-            border-radius: 20px;
-            display: block;
-        }
-
-        .btn-enter, .btn-back {
-            width: 100%;
-            padding: 20px;
-            border: none;
-            border-radius: 20px;
-            font-weight: 800;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn-enter {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-            color: white;
-        }
-
-        .btn-back {
-            background: #8d6e63;
-            color: white;
-            margin-top: 20px;
-        }
-
-        .owner-tag {
-            display: inline-block;
-            padding: 5px 15px;
-            background: #8d6e63;
-            color: white;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            margin-bottom: 10px;
-        }
+        /* 기존 요소 유지 */
+        .gallery-container { width: 100%; height: 250px; border-radius: 25px; overflow: hidden; margin-bottom: 20px; }
+        .gallery-wrapper { display: flex; height: 100%; width: 300%; }
+        .gallery-item { width: 33.333%; height: 100%; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        video { width: 100%; border-radius: 20px; }
+        .btn-enter, .btn-back { width: 100%; padding: 20px; border-radius: 20px; border: none; font-weight: 800; cursor: pointer; }
+        .btn-enter { background: var(--primary); color: white; }
     </style>
 </head>
 <body>
@@ -158,100 +97,114 @@
     <canvas id="heart-canvas"></canvas>
 
     <main id="main-view">
-        <div class="hero-card" id="card">
-            <img src="bunny.png" class="toru-img-main" alt="토루">
-            <div class="owner-tag">채린 X 토루</div>
+        <div class="hero-card" style="text-align:center;">
+            <img src="bunny.png" style="width:120px;" alt="토루">
             <h1>토끼2 랜드</h1>
-            <p>사랑스러운 토루와 채린이의 공식 페이지입니다.</p>
+            <p>채린 X 토루 홈페이지</p>
             <button class="btn-enter" onclick="enterArchive()">입장하기</button>
         </div>
     </main>
 
     <section id="archive-view">
-        <div class="section-title">
-            <div class="owner-tag">임채린</div>
-            <h2>토끼2 랜드</h2>
-        </div>
+        <h2 style="text-align:center;">TORU ARCHIVE</h2>
 
         <div class="gallery-container" onclick="nextSlide()">
             <div class="gallery-wrapper" id="gallery-wrapper">
-                <div class="gallery-item"><img src="1.jpg" alt=""></div>
-                <div class="gallery-item"><img src="2.jpg" alt=""></div>
-                <div class="gallery-item"><img src="3.jpg" alt=""></div>
+                <div class="gallery-item"><img src="1.jpg"></div>
+                <div class="gallery-item"><img src="2.jpg"></div>
+                <div class="gallery-item"><img src="3.jpg"></div>
             </div>
         </div>
-        <p style="text-align:center; font-size:0.8rem; color:#999;">위 사진을 클릭하면 다음 사진이 나옵니다</p>
+
+        <div class="list-card">
+            <h3 style="margin-top:0;">📝 토루의 수업자료</h3>
+            <ul class="txt-list">
+                <li class="txt-item" onclick="readText('1.txt')"><span>수업자료1</span> <span>〉</span></li>
+                <li class="txt-item" onclick="readText('2.txt')"><span>수업자료2</span> <span>〉</span></li>
+                <li class="txt-item" onclick="readText('3.txt')"><span>수업자료3</span> <span>〉</span></li>
+                <li class="txt-item" onclick="readText('4.txt')"><span>수업자료4</span> <span>〉</span></li>
+            </ul>
+        </div>
 
         <div class="video-card">
-            <h3 style="margin-top:0; color:#8d6e63;">📹 실물 영접</h3>
             <video src="toru_video.mp4" autoplay muted loop playsinline></video>
         </div>
 
         <button class="btn-back" onclick="location.reload()">처음으로</button>
     </section>
 
+    <div id="text-modal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="close-modal" onclick="closeModal()">닫기</button>
+            <div id="text-body">내용을 불러오는 중...</div>
+        </div>
+    </div>
+
     <script>
-        // 1. 하트 애니메이션
+        // 하트 애니메이션 로직 (동일)
         const canvas = document.getElementById('heart-canvas');
         const ctx = canvas.getContext('2d');
         let hearts = [];
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         class Heart {
             constructor() {
                 this.x = Math.random() * canvas.width;
                 this.y = canvas.height + 10;
-                this.size = Math.random() * 10 + 5;
-                this.speedY = Math.random() * 1.5 + 0.5;
+                this.size = Math.random() * 8 + 4;
+                this.speedY = Math.random() * 1 + 0.5;
                 this.opacity = 1;
             }
-            update() {
-                this.y -= this.speedY;
-                this.opacity -= 0.003;
-            }
-            draw() {
-                ctx.globalAlpha = this.opacity;
-                ctx.fillStyle = '#ff9a9e';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size/2, 0, Math.PI * 2);
-                ctx.fill();
-            }
+            update() { this.y -= this.speedY; this.opacity -= 0.003; }
+            draw() { ctx.globalAlpha = this.opacity; ctx.fillStyle = '#ff9a9e'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size/2, 0, Math.PI * 2); ctx.fill(); }
         }
-
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (Math.random() < 0.1) hearts.push(new Heart());
-            hearts.forEach((h, i) => {
-                h.update();
-                h.draw();
-                if (h.opacity <= 0) hearts.splice(i, 1);
-            });
+            hearts.forEach((h, i) => { h.update(); h.draw(); if (h.opacity <= 0) hearts.splice(i, 1); });
             requestAnimationFrame(animate);
         }
         animate();
 
-        // 2. 갤러리 슬라이드 제어
+        // 페이지 전환 및 갤러리 (동일)
         let currentSlide = 0;
-        const wrapper = document.getElementById('gallery-wrapper');
         function nextSlide() {
             currentSlide = (currentSlide + 1) % 3;
-            gsap.to(wrapper, { x: `${-currentSlide * 33.33}%`, duration: 0.5, ease: "power2.out" });
+            gsap.to("#gallery-wrapper", { x: `${-currentSlide * 33.33}%`, duration: 0.5 });
         }
-
-        // 3. 페이지 전환
         function enterArchive() {
-            const tl = gsap.timeline();
-            tl.to("#main-view", { opacity: 0, y: -20, duration: 0.5 })
-              .set("#main-view", { display: "none" })
-              .set("#archive-view", { display: "block" })
-              .to("#archive-view", { opacity: 1, y: 0, duration: 0.5 });
+            gsap.to("#main-view", { opacity: 0, duration: 0.5, onComplete: () => {
+                document.getElementById('main-view').style.display = 'none';
+                document.getElementById('archive-view').style.display = 'block';
+                gsap.to("#archive-view", { opacity: 1, duration: 0.5 });
+            }});
         }
 
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
+        // 텍스트 읽기 기능 (핵심!)
+        function readText(fileName) {
+            const modal = document.getElementById('text-modal');
+            const body = document.getElementById('text-body');
+            modal.style.display = 'flex';
+            body.innerText = "로딩 중...";
+
+            // Fetch API를 사용하여 서버(또는 로컬 폴더)의 txt 파일을 읽어옴
+            fetch(fileName)
+                .then(response => {
+                    if (!response.ok) throw new Error('파일을 찾을 수 없습니다.');
+                    return response.text();
+                })
+                .then(data => {
+                    body.innerText = data;
+                })
+                .catch(err => {
+                    body.innerText = "에러: " + err.message + "\n(서버 환경이나 경로를 확인하세요)";
+                });
+        }
+
+        function closeModal() {
+            document.getElementById('text-modal').style.display = 'none';
+        }
+
+        window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
     </script>
 </body>
 </html>
