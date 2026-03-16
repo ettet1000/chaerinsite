@@ -126,8 +126,15 @@
             </ul>
         </div>
 
-        <div class="video-card">
-            <video src="toru_video.mp4" autoplay muted loop playsinline></video>
+        <div class="list-card" style="text-align: center;">
+            <h3 style="margin-top:0;">🎮 토루의 하트 캐치</h3>
+            <p style="font-size:0.8rem; color:#8d6e63;">토루를 터치하거나 드래그해서 내려오는 하트를 먹으세요!</p>
+            
+            <div id="game-container" style="position: relative; width: 100%; height: 300px; background: #fff; border-radius: 20px; overflow: hidden; border: 2px solid var(--primary);">
+                <canvas id="game-canvas"></canvas>
+                <div id="game-ui" style="position: absolute; top: 10px; left: 10px; font-weight: bold; color: var(--primary);">Score: 0</div>
+                <button id="start-btn" onclick="startGame()" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px 30px; background: var(--primary); color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer;">게임 시작</button>
+            </div>
         </div>
 
         <button class="btn-back" onclick="location.reload()">처음으로</button>
