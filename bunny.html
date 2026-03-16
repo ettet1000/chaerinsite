@@ -126,15 +126,23 @@
             </ul>
         </div>
 
-        <div class="list-card" style="text-align: center;">
-            <h3 style="margin-top:0;">🎮 토루의 하트 캐치</h3>
-            <p style="font-size:0.8rem; color:#8d6e63;">토루를 터치하거나 드래그해서 내려오는 하트를 먹으세요!</p>
+        <div class="list-card" style="text-align: center; background: linear-gradient(180deg, #fff 0%, #fff0f3 100%);">
+            <h3 style="margin-top:0; color: #ff7675;">💖 토루의 하트 매니아</h3>
             
-            <div id="game-container" style="position: relative; width: 100%; height: 300px; background: #fff; border-radius: 20px; overflow: hidden; border: 2px solid var(--primary);">
-                <canvas id="game-canvas"></canvas>
-                <div id="game-ui" style="position: absolute; top: 10px; left: 10px; font-weight: bold; color: var(--primary);">Score: 0</div>
-                <button id="start-btn" onclick="startGame()" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px 30px; background: var(--primary); color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer;">게임 시작</button>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; font-size: 0.9rem;">
+                <span id="game-score" style="color: var(--primary);">Score: 0</span>
+                <span id="game-level" style="color: #8d6e63;">Level: 1</span>
             </div>
+        
+            <div id="game-container" style="position: relative; width: 100%; height: 350px; background: rgba(255,255,255,0.5); border-radius: 25px; overflow: hidden; border: 3px solid #ffcad4; box-shadow: inset 0 0 20px rgba(255,154,158,0.1);">
+                <canvas id="game-canvas"></canvas>
+                
+                <div id="game-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(255,255,255,0.6); backdrop-filter: blur(4px);">
+                    <h2 id="status-text" style="margin-bottom: 10px; color: #8d6e63;">준비되셨나요?</h2>
+                    <button id="start-btn" onclick="startGame()" style="padding: 15px 40px; background: #ff7675; color: white; border: none; border-radius: 50px; font-weight: 800; font-size: 1.2rem; cursor: pointer; box-shadow: 0 10px 20px rgba(255,118,117,0.3);">START</button>
+                </div>
+            </div>
+            <p style="font-size: 0.75rem; color: #b2bec3; margin-top: 10px;">Level이 올라갈수록 하트가 더 빠르게 떨어집니다!</p>
         </div>
 
         <button class="btn-back" onclick="location.reload()">처음으로</button>
@@ -213,82 +221,134 @@
 
         window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 
-        // --- 게임 로직 (Script 태그 내 하단에 추가) ---
         const gCanvas = document.getElementById('game-canvas');
         const gCtx = gCanvas.getContext('2d');
-        const scoreUI = document.getElementById('game-ui');
+        const scoreUI = document.getElementById('game-score');
+        const levelUI = document.getElementById('game-level');
+        const overlay = document.getElementById('game-overlay');
+        const statusText = document.getElementById('status-text');
         const startBtn = document.getElementById('start-btn');
         
         let score = 0;
+        let level = 1;
         let gameActive = false;
         let toruX = 0;
         let gameHearts = [];
-        
-        // 토루 이미지 로드 (기존 bunny.png 활용)
+        let animationId;
+    
+        // 난이도 조절 변수 (냉정한 확률 설계)
+        const config = {
+            baseSpeed: 2.5,   // 시작 속도
+            speedStep: 0.5,   // 레벨업 당 추가 속도
+            spawnRate: 0.04,  // 하트 생성 확률
+            levelThreshold: 100 // 레벨업 점수 기준
+        };
+    
         const toruSprite = new Image();
         toruSprite.src = 'bunny.png';
     
         function initGame() {
             gCanvas.width = document.getElementById('game-container').clientWidth;
-            gCanvas.height = 300;
+            gCanvas.height = 350;
             toruX = gCanvas.width / 2;
         }
     
-        // 터치/마우스 이벤트
-        const moveToru = (e) => {
+        function moveHandler(e) {
+            if(!gameActive) return;
             const rect = gCanvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             toruX = clientX - rect.left;
-        };
-        gCanvas.addEventListener('mousemove', moveToru);
-        gCanvas.addEventListener('touchmove', moveToru);
+            // 화면 밖 이탈 방지
+            if(toruX < 30) toruX = 30;
+            if(toruX > gCanvas.width - 30) toruX = gCanvas.width - 30;
+        }
+    
+        gCanvas.addEventListener('mousemove', moveHandler);
+        gCanvas.addEventListener('touchmove', moveHandler, {passive: false});
     
         function startGame() {
-            if(gameActive) return;
             initGame();
             score = 0;
+            level = 1;
             gameHearts = [];
             gameActive = true;
-            startBtn.style.display = 'none';
+            overlay.style.display = 'none';
+            scoreUI.innerText = `Score: 0`;
+            levelUI.innerText = `Level: 1`;
             gameLoop();
         }
     
         function gameLoop() {
             if(!gameActive) return;
+    
             gCtx.clearRect(0, 0, gCanvas.width, gCanvas.height);
     
-            // 토루 그리기 (너비 50px)
-            gCtx.drawImage(toruSprite, toruX - 25, gCanvas.height - 60, 50, 50);
-    
-            // 하트 생성 및 이동
-            if(Math.random() < 0.05) {
-                gameHearts.push({ x: Math.random() * gCanvas.width, y: -20, s: Math.random() * 2 + 2 });
+            // 1. 레벨 디자인 (점수에 따른 난이도 상승)
+            let currentLevel = Math.floor(score / config.levelThreshold) + 1;
+            if(currentLevel > level) {
+                level = currentLevel;
+                levelUI.innerText = `Level: ${level}`;
+                // 레벨업 시 효과음 대신 시각적 피드백 가능 (생략)
             }
     
-            gameHearts.forEach((h, i) => {
-                h.y += h.s;
-                // 하트 그리기
-                gCtx.fillStyle = '#ff9a9e';
-                gCtx.beginPath();
-                gCtx.arc(h.x, h.y, 8, 0, Math.PI * 2);
-                gCtx.fill();
+            // 2. 토루(플레이어) 그리기 + 부드러운 움직임
+            gCtx.save();
+            gCtx.shadowBlur = 15;
+            gCtx.shadowColor = 'rgba(255,154,158,0.3)';
+            gCtx.drawImage(toruSprite, toruX - 35, gCanvas.height - 80, 70, 70);
+            gCtx.restore();
     
-                // 충돌 감지
-                if(h.y > gCanvas.height - 60 && Math.abs(h.x - toruX) < 30) {
+            // 3. 하트 생성 로직 (난이도 반영)
+            if(Math.random() < config.spawnRate + (level * 0.005)) {
+                gameHearts.push({
+                    x: Math.random() * (gCanvas.width - 20) + 10,
+                    y: -20,
+                    speed: config.baseSpeed + (level * config.speedStep),
+                    size: Math.random() * 10 + 15,
+                    rot: Math.random() * Math.PI
+                });
+            }
+    
+            // 4. 하트 업데이트 및 그리기
+            gameHearts.forEach((h, i) => {
+                h.y += h.speed;
+                h.rot += 0.05;
+    
+                // 정성스러운 하트 그리기
+                gCtx.save();
+                gCtx.translate(h.x, h.y);
+                gCtx.rotate(h.rot);
+                gCtx.fillStyle = '#ff7675';
+                gCtx.beginPath();
+                // 심플 하트 패스
+                gCtx.moveTo(0, 0);
+                gCtx.bezierCurveTo(-h.size/2, -h.size/2, -h.size, h.size/4, 0, h.size);
+                gCtx.bezierCurveTo(h.size, h.size/4, h.size/2, -h.size/2, 0, 0);
+                gCtx.fill();
+                gCtx.restore();
+    
+                // 충돌 감지 (정교하게 수정)
+                if(h.y > gCanvas.height - 90 && h.y < gCanvas.height - 40 && Math.abs(h.x - toruX) < 40) {
                     gameHearts.splice(i, 1);
-                    score += 10;
+                    score += 20;
                     scoreUI.innerText = `Score: ${score}`;
                 }
     
-                // 바닥에 떨어지면 종료 (난이도 조절 가능)
+                // 게임 오버 조건
                 if(h.y > gCanvas.height) {
-                    gameActive = false;
-                    startBtn.style.display = 'block';
-                    startBtn.innerText = `다시 시작 (점수: ${score})`;
+                    gameOver();
                 }
             });
     
-            requestAnimationFrame(gameLoop);
+            animationId = requestAnimationFrame(gameLoop);
+        }
+    
+        function gameOver() {
+            gameActive = false;
+            cancelAnimationFrame(animationId);
+            overlay.style.display = 'flex';
+            statusText.innerHTML = `<span style="color:#d63031">GAME OVER</span><br><span style="font-size:1.2rem">최종 점수: ${score}</span>`;
+            startBtn.innerText = "다시 도전하기";
         }
     </script>
 </body>
