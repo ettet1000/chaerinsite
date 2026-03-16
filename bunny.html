@@ -205,6 +205,84 @@
         }
 
         window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+
+        // --- 게임 로직 (Script 태그 내 하단에 추가) ---
+        const gCanvas = document.getElementById('game-canvas');
+        const gCtx = gCanvas.getContext('2d');
+        const scoreUI = document.getElementById('game-ui');
+        const startBtn = document.getElementById('start-btn');
+        
+        let score = 0;
+        let gameActive = false;
+        let toruX = 0;
+        let gameHearts = [];
+        
+        // 토루 이미지 로드 (기존 bunny.png 활용)
+        const toruSprite = new Image();
+        toruSprite.src = 'bunny.png';
+    
+        function initGame() {
+            gCanvas.width = document.getElementById('game-container').clientWidth;
+            gCanvas.height = 300;
+            toruX = gCanvas.width / 2;
+        }
+    
+        // 터치/마우스 이벤트
+        const moveToru = (e) => {
+            const rect = gCanvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            toruX = clientX - rect.left;
+        };
+        gCanvas.addEventListener('mousemove', moveToru);
+        gCanvas.addEventListener('touchmove', moveToru);
+    
+        function startGame() {
+            if(gameActive) return;
+            initGame();
+            score = 0;
+            gameHearts = [];
+            gameActive = true;
+            startBtn.style.display = 'none';
+            gameLoop();
+        }
+    
+        function gameLoop() {
+            if(!gameActive) return;
+            gCtx.clearRect(0, 0, gCanvas.width, gCanvas.height);
+    
+            // 토루 그리기 (너비 50px)
+            gCtx.drawImage(toruSprite, toruX - 25, gCanvas.height - 60, 50, 50);
+    
+            // 하트 생성 및 이동
+            if(Math.random() < 0.05) {
+                gameHearts.push({ x: Math.random() * gCanvas.width, y: -20, s: Math.random() * 2 + 2 });
+            }
+    
+            gameHearts.forEach((h, i) => {
+                h.y += h.s;
+                // 하트 그리기
+                gCtx.fillStyle = '#ff9a9e';
+                gCtx.beginPath();
+                gCtx.arc(h.x, h.y, 8, 0, Math.PI * 2);
+                gCtx.fill();
+    
+                // 충돌 감지
+                if(h.y > gCanvas.height - 60 && Math.abs(h.x - toruX) < 30) {
+                    gameHearts.splice(i, 1);
+                    score += 10;
+                    scoreUI.innerText = `Score: ${score}`;
+                }
+    
+                // 바닥에 떨어지면 종료 (난이도 조절 가능)
+                if(h.y > gCanvas.height) {
+                    gameActive = false;
+                    startBtn.style.display = 'block';
+                    startBtn.innerText = `다시 시작 (점수: ${score})`;
+                }
+            });
+    
+            requestAnimationFrame(gameLoop);
+        }
     </script>
 </body>
 </html>
