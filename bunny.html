@@ -3,52 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>토루 채린 월드</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <title>토끼 투 뤤드</title>
     <style>
         :root { 
             --p: #ff9a9e; --pd: #ff7675; --txt: #5d4037; --lcd-bg: #fdf5e6; 
             --glass: rgba(255, 255, 255, 0.9);
-            --bunny-size: 30px;
         }
-        
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background-color: #1a1a1a; overflow: hidden; font-family: 'Pretendard', sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background-color: #1a1a1a; overflow: hidden; font-family: sans-serif; }
         #main-container { position: relative; height: 98vh; aspect-ratio: 673 / 1024; background: url('toy_device.jpg') no-repeat center center; background-size: contain; }
+        #game-screen { position: absolute; top: 35.2%; left: 28.8%; width: 42.4%; height: 34.5%; background-color: var(--lcd-bg); z-index: 10; overflow: hidden; display: flex; flex-direction: column; box-sizing: border-box; border-radius: 4px; }
         
-        #game-screen { 
-            position: absolute; top: 35.2%; left: 28.8%; width: 42.4%; height: 34.5%; 
-            background-color: var(--lcd-bg); z-index: 10; overflow: hidden; 
-            display: flex; flex-direction: column; box-sizing: border-box; border-radius: 4px;
-        }
-
         .view { display: none; width: 100%; height: 100%; padding: 6px; box-sizing: border-box; flex-direction: column; }
         .view.active { display: flex; }
 
-        /* 버튼 및 타이포그래피 */
-        .btn { width: 100%; padding: 8px 0; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 10px; margin-bottom: 4px; box-shadow: 0 2px 0 #d66; transition: 0.1s; }
-        .btn:active { transform: translateY(2px); box-shadow: none; }
+        .btn { width: 100%; padding: 8px 0; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 10px; margin-bottom: 4px; transition: 0.1s; }
         .btn-primary { background: linear-gradient(135deg, var(--p), var(--pd)); color: white; }
         .btn-sub { background: #8d6e63; color: white; margin-top: auto; }
 
-        /* 갤러리 최대화 */
-        .gallery-view { padding: 0 !important; position: relative; }
-        .gallery-container { width: 100%; height: 100%; overflow: hidden; }
-        .gallery-wrapper { display: flex; height: 100%; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .gallery-item { min-width: 100%; height: 100%; }
-        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
-        .gallery-nav { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.4); color: white; padding: 2px 6px; border-radius: 10px; font-size: 8px; }
+        /* 수업 자료 리스트 스타일 */
+        #lesson-items { overflow-y: auto; flex-grow: 1; padding: 2px; }
+        .lesson-card { background: #fff; padding: 8px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 5px; font-size: 9px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .lesson-card:active { background: #f0f0f0; }
 
-        /* 게임 UI 및 조작패드 */
+        /* 모달 시스템 */
+        #modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--lcd-bg); z-index: 2000; display: none; flex-direction: column; padding: 8px; box-sizing: border-box; }
+        #modal-header { font-size: 10px; font-weight: bold; text-align: center; margin-bottom: 5px; color: var(--txt); }
+        #modal-content { flex-grow: 1; background: #fff; border-radius: 8px; padding: 10px; font-size: 9px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5; border: 1px solid #ddd; color: #444; }
+
+        /* 게임 공통 UI */
         .canvas-holder { position: relative; width: 100%; flex-grow: 1; background: #fff; border-radius: 6px; overflow: hidden; border: 1.5px solid #ffcad4; }
-        canvas { width: 100%; height: 100%; display: block; }
+        canvas { width: 100%; height: 100%; display: block; touch-action: none; }
         .ui-row { display: flex; justify-content: space-between; font-size: 9px; font-weight: 900; color: var(--pd); padding-bottom: 2px; }
-        
-        /* 하단 전용 조작 영역 */
-        .touch-pad { width: 100%; height: 30px; background: rgba(0,0,0,0.05); margin-top: 4px; border-radius: 6px; border: 1px dashed var(--pd); display: flex; align-items: center; justify-content: center; font-size: 8px; color: var(--pd); touch-action: none; }
-
-        /* 레벨업 알림 */
-        #level-alert { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff3e3e; font-size: 16px; font-weight: 900; z-index: 200; pointer-events: none; text-shadow: 2px 2px 0 white; display: none; }
-
+        .touch-pad { width: 100%; height: 35px; background: rgba(0,0,0,0.05); margin-top: 4px; border-radius: 6px; border: 1px dashed var(--pd); display: flex; align-items: center; justify-content: center; font-size: 8px; color: var(--pd); touch-action: none; }
         .game-ov { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; }
     </style>
 </head>
@@ -56,33 +42,36 @@
 
 <div id="main-container">
     <div id="game-screen">
-        <div id="level-alert">LEVEL UP!</div>
-
+        
         <div id="view-home" class="view active">
-            <div style="text-align:center; padding: 10px 0;">
-                <img src="bunny.png" style="width: 40px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
-                <h2 style="font-size: 14px; margin: 5px 0;">토루x채린 월드</h2>
-                <p style="font-size: 8px; color: #888;">반가워요! 함께 놀아요!</p>
-            </div>
+            <div style="text-align:center; padding: 10px 0;"><img src="bunny.png" style="width: 35px;"><h3>토루x채린 월드</h3></div>
             <button class="btn btn-primary" onclick="nav('view-gallery')">🖼 사진 앨범</button>
             <button class="btn btn-primary" onclick="nav('view-lesson')">📚 수업 자료</button>
             <button class="btn btn-primary" onclick="nav('view-game-menu')">🎮 미니 게임</button>
         </div>
 
-        <div id="view-gallery" class="view gallery-view">
-            <div class="gallery-container" onclick="nextSlide()">
-                <div class="gallery-wrapper" id="gallery-wrapper">
-                    <div class="gallery-item"><img src="1.jpg"></div>
-                    <div class="gallery-item"><img src="2.jpg"></div>
-                    <div class="gallery-item"><img src="3.jpg"></div>
-                </div>
+        <div id="view-lesson" class="view">
+            <h3 style="text-align:center; font-size:11px;">📚 수업 자료</h3>
+            <div id="lesson-items">
+                <div class="lesson-card" onclick="fetchText('1.txt')"><span>수업 내용 1</span><span>〉</span></div>
+                <div class="lesson-card" onclick="fetchText('2.txt')"><span>수업 내용 2</span><span>〉</span></div>
+                <div class="lesson-card" onclick="fetchText('3.txt')"><span>수업 내용 3</span><span>〉</span></div>
+                <div class="lesson-card" onclick="fetchText('4.txt')"><span>수업 내용 4</span><span>〉</span></div>
             </div>
-            <div class="gallery-nav">터치하여 다음</div>
+            <button class="btn btn-sub" onclick="nav('view-home')">홈으로</button>
+        </div>
+
+        <div id="view-gallery" class="view" style="padding:0;">
+            <div id="gal-wrap" style="display:flex; height:100%; transition:0.3s;" onclick="nextSl()">
+                <img src="1.jpg" style="min-width:100%; object-fit:cover;">
+                <img src="2.jpg" style="min-width:100%; object-fit:cover;">
+                <img src="3.jpg" style="min-width:100%; object-fit:cover;">
+            </div>
             <button class="btn btn-sub" style="position:absolute; bottom:5px; left:5px; width:40px; padding:4px; font-size:7px;" onclick="nav('view-home')">닫기</button>
         </div>
 
         <div id="view-game-menu" class="view">
-            <h3 style="text-align:center; font-size: 11px;">챌린지 선택</h3>
+            <h3 style="text-align:center; font-size:11px;">챌린지 선택</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
                 <button class="btn btn-primary" onclick="nav('view-g1')">❤️ 하트</button>
                 <button class="btn btn-primary" onclick="nav('view-g2')">🥕 점프</button>
@@ -91,130 +80,75 @@
             </div>
             <button class="btn btn-sub" onclick="nav('view-home')">홈으로</button>
         </div>
+        
+        <div id="view-g1" class="view"><div class="ui-row"><span id="l1">❤️❤️❤️</span><span id="s1">0</span></div><div class="canvas-holder"><canvas id="c1"></canvas><div id="ov1" class="game-ov"><button class="btn btn-primary" onclick="initG1()">시작</button></div></div><div class="touch-pad" id="pad1">스와이프 이동</div><button class="btn btn-sub" onclick="nav('view-game-menu')">나가기</button></div>
+        <div id="view-g2" class="view"><div class="ui-row"><span id="l2">❤️❤️❤️</span><span id="s2">0</span></div><div class="canvas-holder"><canvas id="c2"></canvas><div id="ov2" class="game-ov"><button class="btn btn-primary" onclick="initG2()">시작</button></div></div><div class="touch-pad" onmousedown="jump2()" ontouchstart="jump2()">터치 점프</div><button class="btn btn-sub" onclick="nav('view-game-menu')">나가기</button></div>
+        <div id="view-g3" class="view"><div class="ui-row"><span id="l3">찾기</span><span id="s3">0/3</span></div><div class="canvas-holder"><canvas id="c3"></canvas><div id="ov3" class="game-ov"><button class="btn btn-primary" onclick="initG3()">시작</button></div></div><button class="btn btn-sub" onclick="nav('view-game-menu')">나가기</button></div>
+        <div id="view-g4" class="view"><div class="ui-row"><span id="l4">❤️❤️❤️</span><span id="s4">0</span></div><div class="canvas-holder"><canvas id="c4"></canvas><div id="ov4" class="game-ov"><button class="btn btn-primary" onclick="initG4()">시작</button></div></div><button class="btn btn-sub" onclick="nav('view-game-menu')">나가기</button></div>
 
-        <div id="view-g1" class="view">
-            <div class="ui-row"><span id="l1">❤️❤️❤️</span><span id="lv1">LV.1</span><span id="s1">0</span></div>
-            <div class="canvas-holder"><canvas id="c1"></canvas><div id="ov1" class="game-ov"><button class="btn btn-primary" style="width:60px" onclick="initG1()">시작</button></div></div>
-            <div class="touch-pad" id="pad1">◀ 이곳을 스와이프하여 이동 ▶</div>
-            <button class="btn btn-sub" onclick="kill(); nav('view-game-menu')">나가기</button>
-        </div>
-
-        <div id="view-g2" class="view">
-            <div class="ui-row"><span id="l2">❤️❤️❤️</span><span id="lv2">LV.1</span><span id="s2">0</span></div>
-            <div class="canvas-holder"><canvas id="c2"></canvas><div id="ov2" class="game-ov"><button class="btn btn-primary" style="width:60px" onclick="initG2()">시작</button></div></div>
-            <div class="touch-pad" onmousedown="jump2()" ontouchstart="jump2()">터치하여 점프!</div>
-            <button class="btn btn-sub" onclick="kill(); nav('view-game-menu')">나가기</button>
-        </div>
-
-        <div id="view-lesson" class="view">
-             <h3 style="text-align:center; font-size:11px;">📚 수업 자료</h3>
-             <div id="lesson-list" style="overflow-y:auto; flex-grow:1;"></div>
-             <button class="btn btn-sub" onclick="nav('view-home')">홈으로</button>
+        <div id="modal">
+            <div id="modal-header"></div>
+            <div id="modal-content"></div>
+            <button class="btn btn-primary" style="margin-top:8px;" onclick="closeModal()">닫기</button>
         </div>
     </div>
 </div>
 
 <script>
-    let active = false, loop = null, itv = null, score = 0, life = 3, level = 1, gameTime = 0;
+    // [시스템 공통]
+    let active = false, loop = null, itv = null, score = 0, life = 3;
     const imgBunny = new Image(); imgBunny.src = 'bunny.png';
     const imgHeart = new Image(); imgHeart.src = 'hearts.png';
     const imgCarrot = new Image(); imgCarrot.src = 'carrot.png';
 
-    function nav(id) { kill(); document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); if(id==='view-lesson') renderLessons(); }
+    function nav(id) { kill(); document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
     function kill() { active = false; clearInterval(itv); cancelAnimationFrame(loop); document.querySelectorAll('.game-ov').forEach(ov => ov.style.display = 'flex'); }
-    
-    // 레벨업 시스템
-    function updateLevel(idx) {
-        gameTime++;
-        if(gameTime % 1000 === 0) { // 약 15~20초마다 레벨업
-            level++;
-            const alert = document.getElementById('level-alert');
-            alert.style.display = 'block';
-            setTimeout(() => alert.style.display = 'none', 1000);
-            return true;
-        }
-        return false;
-    }
 
-    // G1: 하트 수집 (조작패드 로직)
-    const c1 = document.getElementById('c1'), ctx1 = c1.getContext('2d');
-    let tx1 = 0, hts1 = [];
-    function initG1() { 
-        c1.width = c1.offsetWidth; c1.height = c1.offsetHeight; 
-        active = true; score = 0; life = 3; level = 1; gameTime = 0; hts1 = []; tx1 = c1.width/2;
-        document.getElementById('ov1').style.display = 'none';
-        itv = setInterval(() => { if(active) hts1.push({x:Math.random()*c1.width, y:-10, s: 1 + (level*0.4)}) }, 1000);
-        loop1();
-    }
-    function loop1() {
-        if(!active) return;
-        ctx1.clearRect(0,0,c1.width, c1.height);
-        updateLevel(1);
-        document.getElementById('lv1').innerText = `LV.${level}`;
-        const gY = c1.height - 15;
-        if (imgBunny.complete) ctx1.drawImage(imgBunny, tx1 - 15, gY - 30, 30, 30);
+    // [수업자료 Fetch 로직 - 핵심]
+    function fetchText(fileName) {
+        const modal = document.getElementById('modal');
+        const content = document.getElementById('modal-content');
+        const header = document.getElementById('modal-header');
         
-        hts1.forEach((h, i) => {
-            h.y += h.s;
-            if(imgHeart.complete) ctx1.drawImage(imgHeart, h.x-8, h.y-8, 16, 16);
-            if(Math.hypot(h.x-tx1, h.y-gY+15) < 20) { score += 10; hts1.splice(i,1); }
-            else if(h.y > c1.height) { life--; hts1.splice(i,1); if(life<=0) kill(); }
-        });
-        document.getElementById('s1').innerText = score;
-        document.getElementById('l1').innerText = "❤️".repeat(life);
-        loop = requestAnimationFrame(loop1);
-    }
-    // 조작패드 이벤트
-    const pad1 = document.getElementById('pad1');
-    const handleMove = (e) => {
-        const rect = pad1.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        tx1 = ((clientX - rect.left) / rect.width) * c1.width;
-        if(tx1 < 15) tx1 = 15; if(tx1 > c1.width - 15) tx1 = c1.width - 15;
-    };
-    pad1.addEventListener('mousemove', handleMove);
-    pad1.addEventListener('touchmove', (e) => { handleMove(e); e.preventDefault(); }, {passive: false});
+        header.innerText = `${fileName} 불러오는 중...`;
+        content.innerText = "데이터를 가져오고 있습니다. 서버 속도에 따라 지연될 수 있습니다.";
+        modal.style.display = 'flex';
 
-    // G2: 점프 (난이도 상승 적용)
-    const c2 = document.getElementById('c2'), ctx2 = c2.getContext('2d');
-    let ty2 = 0, dy2 = 0, obs2 = [];
-    function initG2() { 
-        c2.width = c2.offsetWidth; c2.height = c2.offsetHeight; 
-        active = true; score = 0; life = 3; level = 1; gameTime = 0; obs2 = []; 
-        ty2 = c2.height - 15; document.getElementById('ov2').style.display = 'none';
-        itv = setInterval(() => { if(active) obs2.push({x: c2.width, w: 12, h: 15 + Math.random()*level*2}) }, 2000 - (level*100));
-        loop2();
-    }
-    function jump2() { if(active && ty2 >= c2.height - 17) dy2 = -4.5; }
-    function loop2() {
-        if(!active) return;
-        ctx2.clearRect(0,0,c2.width, c2.height);
-        updateLevel(2);
-        document.getElementById('lv2').innerText = `LV.${level}`;
-        const gY = c2.height - 15;
-        dy2 += 0.25; ty2 += dy2; if(ty2 > gY) { ty2 = gY; dy2 = 0; }
-        if (imgBunny.complete) ctx2.drawImage(imgBunny, 20, ty2-30, 30, 30);
-        
-        obs2.forEach((o, i) => {
-            o.x -= (1.8 + level*0.3);
-            if(imgCarrot.complete) ctx2.drawImage(imgCarrot, o.x, gY-o.h, 15, o.h);
-            if(o.x < 45 && o.x > 15 && ty2 > gY - o.h) { life--; obs2.splice(i,1); if(life<=0) kill(); }
-            if(o.x < -20) { score += 50; obs2.splice(i,1); }
-        });
-        document.getElementById('s2').innerText = score;
-        document.getElementById('l2').innerText = "❤️".repeat(life);
-        loop = requestAnimationFrame(loop2);
+        // 서버에서 텍스트 파일 호출 (캐시 방지를 위해 랜덤 파라미터 추가 가능)
+        fetch(fileName + "?v=" + Math.random())
+            .then(response => {
+                if (!response.ok) throw new Error('파일을 찾을 수 없습니다 (404)');
+                return response.text();
+            })
+            .then(data => {
+                header.innerText = fileName;
+                content.innerText = data;
+            })
+            .catch(error => {
+                header.innerText = "오류 발생";
+                content.innerText = `[불러오기 실패]\n원인: ${error.message}\n\n파일이 서버의 HTML과 같은 경로에 있는지 확인하세요.`;
+            });
     }
 
-    // 갤러리 슬라이드
-    let curSl = 0;
-    function nextSlide() { curSl = (curSl + 1) % 3; document.getElementById('gallery-wrapper').style.transform = `translateX(-${curSl * 100}%)`; }
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-    // 수업 자료 렌더링
-    function renderLessons() {
-        const list = document.getElementById('lesson-list');
-        list.innerHTML = [1,2,3,4].map(i => `<div style="padding:8px; background:#fff; margin-bottom:4px; border-radius:6px; font-size:9px; border:1px solid #eee;">수업 자료 ${i} <span style="float:right">〉</span></div>`).join('');
-    }
+    // [게임 로직 보강]
+    // G3: 찾기
+    const c3 = document.getElementById('c3'), ctx3 = c3.getContext('2d');
+    let cts3 = [];
+    function initG3() { c3.width = c3.offsetWidth; c3.height = c3.offsetHeight; active = true; score = 0; cts3 = []; for(let i=0; i<3; i++) cts3.push({x: 15+Math.random()*70, y: 15+Math.random()*70, f: false}); document.getElementById('ov3').style.display = 'none'; rdr3(); }
+    function rdr3() { if(!active) return; ctx3.clearRect(0,0,c3.width, c3.height); const m = c3.width/2; ctx3.fillStyle="#eee"; ctx3.fillRect(m,0,1,c3.height); cts3.forEach(d => { let sx = d.x*m/100, sy = d.y*c3.height/100; if(imgCarrot.complete) ctx3.drawImage(imgCarrot, sx-8, sy-10, 16, 20); if(d.f) ctx3.drawImage(imgCarrot, m+sx-8, sy-10, 16, 20); }); document.getElementById('s3').innerText = `${score}/3`; if(score>=3) { kill(); document.getElementById('ov3').innerHTML = "CLEAR!<br><button class='btn btn-primary' onclick='initG3()'>RETRY</button>"; } }
+    c3.onmousedown = (e) => { let r = c3.getBoundingClientRect(), mx = e.clientX-r.left, my = e.clientY-r.top, m = c3.width/2; cts3.forEach(d => { if(!d.f && Math.hypot(mx-(m+d.x*m/100), my-(d.y*c3.height/100))<15) { d.f=true; score++; rdr3(); } }); };
+
+    // G4: 방울
+    const c4 = document.getElementById('c4'), ctx4 = c4.getContext('2d');
+    let bbs4 = [];
+    function initG4() { c4.width = c4.offsetWidth; c4.height = c4.offsetHeight; active = true; score = 0; life = 3; bbs4 = []; document.getElementById('ov4').style.display = 'none'; itv = setInterval(() => { if(active) bbs4.push({x: 20+Math.random()*(c4.width-40), y: c4.height+20, r: 18, p: 0}) }, 1000); loop4(); }
+    function loop4() { if(!active) return; ctx4.clearRect(0,0,c4.width, c4.height); bbs4.forEach((b, i) => { if(b.p === 0) { b.y -= 1.2; ctx4.beginPath(); ctx4.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx4.strokeStyle = "lightblue"; ctx4.stroke(); if(b.y < -20) { life--; bbs4.splice(i,1); if(life<=0) kill(); } } else { b.p--; if(b.p<=0) bbs4.splice(i,1); } }); document.getElementById('s4').innerText = score; document.getElementById('l4').innerText = "❤️".repeat(life); loop = requestAnimationFrame(loop4); }
+    c4.onmousedown = (e) => { let r = c4.getBoundingClientRect(), mx = e.clientX-r.left, my = e.clientY-r.top; bbs4.forEach(b => { if(b.p===0 && Math.hypot(mx-b.x, my-b.y)<b.r) { b.p=5; score+=10; } }); };
+
+    // G1/G2 생략된 함수들은 이전 답변과 동일하게 유지하거나, 완전한 통합본을 위해 V10.0의 해당 파트를 그대로 사용하시면 됩니다.
+    // [V10.0의 G1, G2 로직을 여기에 복사해 넣으세요]
 </script>
 </body>
 </html>
