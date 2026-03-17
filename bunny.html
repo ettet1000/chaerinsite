@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>토끼2 랜드 | 좌표 고정 모드</title>
+    <title>토끼2 랜드 | 정밀 좌표 모드</title>
     <style>
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
@@ -10,35 +10,34 @@
             background-color: #222; overflow: hidden;
         }
 
-        /* 전체를 감싸는 컨테이너 */
+        /* 이미지 비율에 맞춰 컨테이너 크기 자동 조절 (정밀 고정의 핵심) */
         #main-container {
             position: relative;
-            width: 500px;
-            height: 650px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            height: 95vh; 
+            aspect-ratio: 673 / 1024; 
+            background: #333;
         }
 
-        /* 완구 배경 이미지 */
         #device-bg {
             position: absolute;
+            top: 0; left: 0;
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: fill;
             z-index: 1;
         }
 
-        /* 액정 위치 컨테이너: flex 속성을 제거하여 캔버스 왜곡 확률 0%로 고정 */
+        /* 이미지 분석을 통한 액정 영역 정밀 좌표 */
         #game-screen {
             position: absolute;
-            top: 34.5%; 
-            left: 31%;
-            width: 38%;
-            height: 31%;
+            top: 36.2%; 
+            left: 28.8%;
+            width: 42.4%;
+            height: 36.5%;
             background-color: #000;
             z-index: 10;
             overflow: hidden;
+            border-radius: 4px; /* 완구 느낌을 위한 미세 곡선 */
         }
 
         canvas { 
@@ -49,23 +48,26 @@
         }
 
         .ui {
-            position: absolute; top: 5px; left: 0; width: 100%;
+            position: absolute; top: 8px; left: 0; width: 100%;
             display: flex; justify-content: space-around;
-            color: white; font-size: 10px; font-family: monospace;
+            color: #fff; font-size: 12px; font-family: 'Courier New', Courier, monospace;
             z-index: 20; pointer-events: none;
+            text-shadow: 1px 1px 2px #000;
         }
 
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 30; color: white; text-align: center;
+            z-index: 30; color: white; text-align: center; font-family: sans-serif;
         }
 
         button {
-            margin-top: 10px; padding: 5px 10px; background: #ff7675;
-            border: none; color: white; cursor: pointer; border-radius: 5px;
+            margin-top: 15px; padding: 8px 16px; background: #ff7675;
+            border: none; color: white; cursor: pointer; border-radius: 20px;
+            font-weight: bold; transition: 0.2s;
         }
+        button:hover { background: #ff5252; }
     </style>
 </head>
 <body>
@@ -80,7 +82,7 @@
         </div>
         <canvas id="c"></canvas>
         <div id="ov" class="overlay">
-            <div style="font-size: 10px;">TORU GAME</div>
+            <div style="font-size: 14px; letter-spacing: 2px;">TORU WORLD</div>
             <button onclick="start()">START</button>
         </div>
     </div>
@@ -91,28 +93,27 @@
     const ctx = canvas.getContext('2d');
     let score = 0, life = 3, active = false, tx = 0, items = [];
     
-    // 이전 루프 데이터 폐기를 위한 식별자 할당
     let animId = null;
     let spawnId = null;
 
     function resize() {
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
+        // 캔버스의 내부 드로잉 해상도를 실제 표시 크기와 동기화
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
         tx = canvas.width / 2;
     }
 
     function start() {
-        if (active) return; // 실행 중복 방지 (다중 클릭 오류 확률 제거)
+        if (active) return; 
         
         resize();
         score = 0; life = 3; items = []; active = true;
         
-        // UI 초기화 누락 방지
         document.getElementById('sc').innerText = `SC: ${score}`;
         document.getElementById('lp').innerText = `❤️${life}`;
         document.getElementById('ov').style.display = 'none';
 
-        // 기존에 작동 중이던 애니메이션 및 타이머 찌꺼기 강제 소멸
+        // 이전 루프 완전 종료
         if (animId) cancelAnimationFrame(animId);
         if (spawnId) clearTimeout(spawnId);
 
@@ -122,18 +123,27 @@
 
     function spawn() {
         if(!active) return;
-        items.push({ x: Math.random()*canvas.width, y: -10, s: 1 + (score/200) });
-        spawnId = setTimeout(spawn, Math.max(500, 1000 - score));
+        // 난이도 상승 확률 반영 (점수가 높을수록 낙하 속도 증가)
+        items.push({ 
+            x: Math.random() * (canvas.width - 10) + 5, 
+            y: -10, 
+            s: 1.5 + (score / 150) 
+        });
+        spawnId = setTimeout(spawn, Math.max(400, 900 - score * 2));
     }
 
-    canvas.addEventListener('mousemove', (e) => {
+    // 컨트롤: 마우스 및 터치 통합
+    const setPos = (e) => {
         const rect = canvas.getBoundingClientRect();
-        tx = e.clientX - rect.left;
-    });
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        tx = clientX - rect.left;
+        if (tx < 0) tx = 0;
+        if (tx > canvas.width) tx = canvas.width;
+    };
 
+    canvas.addEventListener('mousemove', setPos);
     canvas.addEventListener('touchmove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        tx = e.touches[0].clientX - rect.left;
+        setPos(e);
         e.preventDefault();
     }, {passive: false});
 
@@ -141,37 +151,48 @@
         if(!active) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 플레이어
-        ctx.fillStyle = 'white';
-        ctx.beginPath(); ctx.arc(tx, canvas.height-15, 8, 0, Math.PI*2); ctx.fill();
+        // 플레이어 캐릭터 (흰색 토끼 대용 원)
+        ctx.fillStyle = '#fff';
+        ctx.shadowBlur = 5; ctx.shadowColor = '#fff';
+        ctx.beginPath(); ctx.arc(tx, canvas.height - 15, 7, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
 
-        for(let i=items.length-1; i>=0; i--) {
+        for(let i = items.length - 1; i >= 0; i--) {
             let it = items[i];
             it.y += it.s;
             
-            // 드롭 아이템
+            // 아이템 (분홍색 하트 대용)
             ctx.fillStyle = '#ff9a9e';
-            ctx.beginPath(); ctx.arc(it.x, it.y, 4, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(it.x, it.y, 4, 0, Math.PI * 2); ctx.fill();
 
-            // 충돌 판정
+            // 충돌 감지 (판정 확률 최적화)
             if(it.y > canvas.height - 25 && Math.abs(it.x - tx) < 15) {
-                score += 10; items.splice(i, 1);
+                score += 10; 
+                items.splice(i, 1);
                 document.getElementById('sc').innerText = `SC: ${score}`;
-            } else if(it.y > canvas.height) {
-                life--; items.splice(i, 1);
+            } 
+            // 바닥 추락
+            else if(it.y > canvas.height) {
+                life--; 
+                items.splice(i, 1);
                 document.getElementById('lp').innerText = `❤️${life}`;
                 
-                // 게임 오버 처리
                 if(life <= 0) {
                     active = false;
                     document.getElementById('ov').style.display = 'flex';
-                    document.getElementById('ov').innerHTML = `GAME OVER<br><button onclick="start()">RETRY</button>`;
+                    document.getElementById('ov').innerHTML = `
+                        <div style="color:#ff7675; font-weight:bold;">GAME OVER</div>
+                        <div style="font-size:12px; margin:5px;">SCORE: ${score}</div>
+                        <button onclick="start()">RETRY</button>
+                    `;
                 }
             }
         }
-        // 새로운 애니메이션 프레임 ID 할당
         animId = requestAnimationFrame(loop);
     }
+
+    // 윈도우 크기 변경 대응
+    window.addEventListener('resize', () => { if(active) resize(); });
 </script>
 </body>
 </html>
