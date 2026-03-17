@@ -2,72 +2,84 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>토끼2 랜드 | 정밀 좌표 모드</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>토끼2 랜드 | 좌표 고정 모드</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
+        /* [1] 구조 및 레이아웃 고정 */
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             display: flex; justify-content: center; align-items: center;
             background-color: #222; overflow: hidden;
+            font-family: 'Apple SD Gothic Neo', sans-serif;
         }
 
-        /* 이미지 비율에 맞춰 컨테이너 크기 자동 조절 (정밀 고정의 핵심) */
         #main-container {
             position: relative;
-            height: 95vh; 
-            aspect-ratio: 673 / 1024; 
-            background: #333;
+            height: 95vh;
+            aspect-ratio: 673 / 1024;
         }
 
         #device-bg {
             position: absolute;
             top: 0; left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             object-fit: fill;
             z-index: 1;
         }
 
-        /* 이미지 분석을 통한 액정 영역 정밀 좌표 */
+        /* [2] 액정 영역: 모든 콘텐츠는 이 내부에서 스크롤됨 */
         #game-screen {
             position: absolute;
-            top: 36.2%; 
-            left: 28.8%;
-            width: 42.4%;
-            height: 36.5%;
-            background-color: #000;
+            top: 36.2%; left: 28.8%;
+            width: 42.4%; height: 36.5%;
+            background-color: #fdf5e6;
             z-index: 10;
-            overflow: hidden;
-            border-radius: 4px; /* 완구 느낌을 위한 미세 곡선 */
+            overflow-y: auto; /* 내부 스크롤 허용 */
+            overflow-x: hidden;
+            border-radius: 4px;
+            font-size: 10px; /* 좁은 화면을 위한 폰트 조정 */
         }
 
-        canvas { 
-            display: block; 
-            width: 100%; 
-            height: 100%; 
-            touch-action: none; 
+        /* 스크롤바 숨기기 (선택 사항) */
+        #game-screen::-webkit-scrollbar { width: 0; }
+
+        /* [3] 아카이브 스타일 액정 최적화 */
+        :root { --primary: #ff9a9e; --text: #5d4037; --glass: rgba(255, 255, 255, 0.9); }
+        
+        #main-view, #archive-view { padding: 10px; width: 100%; box-sizing: border-box; }
+        #archive-view { display: none; opacity: 0; }
+
+        .card { 
+            background: var(--glass); 
+            border-radius: 15px; 
+            padding: 10px; 
+            margin-bottom: 10px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255,255,255,0.4);
         }
 
-        .ui {
-            position: absolute; top: 8px; left: 0; width: 100%;
-            display: flex; justify-content: space-around;
-            color: #fff; font-size: 12px; font-family: 'Courier New', Courier, monospace;
-            z-index: 20; pointer-events: none;
-            text-shadow: 1px 1px 2px #000;
-        }
+        h1 { font-size: 14px; margin: 5px 0; }
+        h2 { font-size: 12px; }
+        p { font-size: 9px; }
 
-        .overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 30; color: white; text-align: center; font-family: sans-serif;
-        }
+        .gallery-container { width: 100%; height: 100px; border-radius: 10px; overflow: hidden; position: relative; }
+        .gallery-wrapper { display: flex; height: 100%; width: 300%; }
+        .gallery-item { width: 33.333%; height: 100%; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
 
-        button {
-            margin-top: 15px; padding: 8px 16px; background: #ff7675;
-            border: none; color: white; cursor: pointer; border-radius: 20px;
-            font-weight: bold; transition: 0.2s;
-        }
-        button:hover { background: #ff5252; }
+        .txt-item { padding: 8px; background: #fff; border-radius: 10px; margin-bottom: 5px; display: flex; justify-content: space-between; border: 1px solid #eee; font-size: 9px;}
+
+        #game-container { position: relative; width: 100%; height: 150px; background: #fff; border-radius: 15px; overflow: hidden; border: 2px solid #ffcad4; }
+        #game-canvas { width: 100%; height: 100%; touch-action: none; display: block;}
+
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 10px; }
+        .btn-primary { background: linear-gradient(135deg, #ff9a9e 0%, #ff7675 100%); color: white; }
+
+        /* 모달 레이어 */
+        #text-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: none; justify-content: center; align-items: center; }
+        .modal-content { background: #fff; width: 85%; max-height: 80%; border-radius: 15px; padding: 15px; overflow-y: auto; font-size: 9px; line-height: 1.4; position: relative;}
     </style>
 </head>
 <body>
@@ -76,123 +88,159 @@
     <img src="toy_device.jpg" id="device-bg">
 
     <div id="game-screen">
-        <div class="ui">
-            <span id="sc">SC: 0</span>
-            <span id="lp">❤️3</span>
-        </div>
-        <canvas id="c"></canvas>
-        <div id="ov" class="overlay">
-            <div style="font-size: 14px; letter-spacing: 2px;">TORU WORLD</div>
-            <button onclick="start()">START</button>
+        <main id="main-view">
+            <div class="card" style="text-align: center;">
+                <img src="bunny.png" style="width: 60px;" alt="토루">
+                <h1>토끼2 랜드</h1>
+                <p style="color: #8d6e63;">LIM CHAERIN X TORU</p>
+                <button class="btn btn-primary" onclick="enterArchive()">입장하기</button>
+            </div>
+        </main>
+
+        <section id="archive-view">
+            <div class="card">
+                <div class="gallery-container" onclick="nextSlide()">
+                    <div class="gallery-wrapper" id="gallery-wrapper">
+                        <div class="gallery-item"><img src="1.jpg"></div>
+                        <div class="gallery-item"><img src="2.jpg"></div>
+                        <div class="gallery-item"><img src="3.jpg"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="text-align: center;">
+                <div style="display: flex; justify-content: space-between; font-size: 8px; margin-bottom: 5px;">
+                    <span id="score-ui">Score: 0</span>
+                    <span id="life-ui">Life: ❤️❤️❤️</span>
+                </div>
+                <div id="game-container">
+                    <canvas id="game-canvas"></canvas>
+                    <div id="game-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                        <h2 id="status-text" style="font-size:10px;">하트 매니아</h2>
+                        <button class="btn btn-primary" style="width:auto; padding:5px 15px;" onclick="startGame()">START</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin:0 0 5px 0; font-size:10px;">📝 수업시간</h3>
+                <div class="txt-item" onclick="readText('1.txt')"><span>수업시간1</span><span>〉</span></div>
+                <div class="txt-item" onclick="readText('2.txt')"><span>수업시간2</span><span>〉</span></div>
+                <div class="txt-item" onclick="readText('3.txt')"><span>수업시간3</span><span>〉</span></div>
+                <div class="txt-item" onclick="readText('4.txt')"><span>수업시간4</span><span>〉</span></div>
+            </div>
+
+            <button class="btn" style="background: #8d6e63; color:white; margin-bottom:20px;" onclick="location.reload()">처음으로</button>
+        </section>
+
+        <div id="text-modal" onclick="this.style.display='none'">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <div id="text-body">로딩 중...</div>
+                <button class="btn btn-primary" style="margin-top:10px;" onclick="document.getElementById('text-modal').style.display='none'">닫기</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    const canvas = document.getElementById('c');
-    const ctx = canvas.getContext('2d');
-    let score = 0, life = 3, active = false, tx = 0, items = [];
-    
-    let animId = null;
-    let spawnId = null;
+    // [1] 페이지 전환 및 갤러리
+    let currentSlide = 0;
+    function enterArchive() { 
+        gsap.to("#main-view", {opacity:0, duration:0.4, onComplete:()=>{ 
+            document.getElementById('main-view').style.display='none'; 
+            document.getElementById('archive-view').style.display='block'; 
+            gsap.to("#archive-view", {opacity:1}); 
+        }}); 
+    }
+    function nextSlide() { currentSlide = (currentSlide+1)%3; gsap.to("#gallery-wrapper", {x: `${-currentSlide * 33.33}%`, duration:0.5}); }
 
-    function resize() {
-        // 캔버스의 내부 드로잉 해상도를 실제 표시 크기와 동기화
-        canvas.width = canvas.clientWidth;
-        canvas.height = canvas.clientHeight;
-        tx = canvas.width / 2;
+    // [2] 게임 시스템 (액정 크기에 맞게 재조정됨)
+    const gCanvas = document.getElementById('game-canvas');
+    const gCtx = gCanvas.getContext('2d');
+    let score=0, lives=3, gameActive=false, toruX=0, items=[], toruImg=new Image(), gameInterval;
+    toruImg.src = 'bunny.png';
+
+    function startGame() {
+        gCanvas.width = gCanvas.offsetWidth; 
+        gCanvas.height = gCanvas.offsetHeight;
+        score=0; lives=3; items=[]; gameActive=true;
+        document.getElementById('game-overlay').style.display='none';
+        updateUI();
+        clearInterval(gameInterval);
+        gameInterval = setInterval(spawnHeart, 1200);
+        gameLoop();
     }
 
-    function start() {
-        if (active) return; 
-        
-        resize();
-        score = 0; life = 3; items = []; active = true;
-        
-        document.getElementById('sc').innerText = `SC: ${score}`;
-        document.getElementById('lp').innerText = `❤️${life}`;
-        document.getElementById('ov').style.display = 'none';
-
-        // 이전 루프 완전 종료
-        if (animId) cancelAnimationFrame(animId);
-        if (spawnId) clearTimeout(spawnId);
-
-        loop();
-        spawn();
+    function updateUI() {
+        document.getElementById('score-ui').innerText = `Score: ${score}`;
+        document.getElementById('life-ui').innerText = `Life: ${"❤️".repeat(lives)}`;
     }
 
-    function spawn() {
-        if(!active) return;
-        // 난이도 상승 확률 반영 (점수가 높을수록 낙하 속도 증가)
-        items.push({ 
-            x: Math.random() * (canvas.width - 10) + 5, 
-            y: -10, 
-            s: 1.5 + (score / 150) 
+    function spawnHeart() {
+        if(!gameActive) return;
+        const isGold = Math.random() < 0.15;
+        items.push({
+            x: Math.random()*(gCanvas.width-20)+10, y:-20,
+            speed: 1.2 + (score/600), type: isGold ? 'gold' : 'normal',
+            size: 15, wave: Math.random()*Math.PI*2
         });
-        spawnId = setTimeout(spawn, Math.max(400, 900 - score * 2));
     }
 
-    // 컨트롤: 마우스 및 터치 통합
-    const setPos = (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        tx = clientX - rect.left;
-        if (tx < 0) tx = 0;
-        if (tx > canvas.width) tx = canvas.width;
+    const moveHandler = (e) => {
+        const rect = gCanvas.getBoundingClientRect();
+        const x = e.touches ? e.touches[0].clientX : e.clientX;
+        toruX = x - rect.left;
+        if(toruX < 20) toruX = 20;
+        if(toruX > gCanvas.width - 20) toruX = gCanvas.width - 20;
     };
+    gCanvas.addEventListener('mousemove', moveHandler);
+    gCanvas.addEventListener('touchmove', moveHandler, {passive:false});
 
-    canvas.addEventListener('mousemove', setPos);
-    canvas.addEventListener('touchmove', (e) => {
-        setPos(e);
-        e.preventDefault();
-    }, {passive: false});
+    function drawHeart(ctx, x, y, size, color) {
+        ctx.fillStyle = color; ctx.beginPath();
+        ctx.moveTo(x, y + size/4);
+        ctx.bezierCurveTo(x, y, x - size/2, y, x - size/2, y + size/4);
+        ctx.bezierCurveTo(x - size/2, y + size/1.5, x, y + size, x, y + size);
+        ctx.bezierCurveTo(x, y + size/1.5, x + size/2, y + size/4, x + size/2, y + size/4);
+        ctx.bezierCurveTo(x + size/2, y, x, y, x, y + size/4);
+        ctx.fill();
+    }
 
-    function loop() {
-        if(!active) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function gameLoop() {
+        if(!gameActive) return;
+        gCtx.clearRect(0,0,gCanvas.width, gCanvas.height);
+        gCtx.drawImage(toruImg, toruX-15, gCanvas.height-35, 30, 30);
 
-        // 플레이어 캐릭터 (흰색 토끼 대용 원)
-        ctx.fillStyle = '#fff';
-        ctx.shadowBlur = 5; ctx.shadowColor = '#fff';
-        ctx.beginPath(); ctx.arc(tx, canvas.height - 15, 7, 0, Math.PI * 2); ctx.fill();
-        ctx.shadowBlur = 0;
+        items.forEach((item, i) => {
+            item.y += item.speed;
+            item.wave += 0.05;
+            const drawX = item.x + Math.sin(item.wave)*8;
+            drawHeart(gCtx, drawX, item.y, item.size, item.type==='gold'?'#FFD700':'#ff7675');
 
-        for(let i = items.length - 1; i >= 0; i--) {
-            let it = items[i];
-            it.y += it.s;
-            
-            // 아이템 (분홍색 하트 대용)
-            ctx.fillStyle = '#ff9a9e';
-            ctx.beginPath(); ctx.arc(it.x, it.y, 4, 0, Math.PI * 2); ctx.fill();
-
-            // 충돌 감지 (판정 확률 최적화)
-            if(it.y > canvas.height - 25 && Math.abs(it.x - tx) < 15) {
-                score += 10; 
-                items.splice(i, 1);
-                document.getElementById('sc').innerText = `SC: ${score}`;
-            } 
-            // 바닥 추락
-            else if(it.y > canvas.height) {
-                life--; 
-                items.splice(i, 1);
-                document.getElementById('lp').innerText = `❤️${life}`;
-                
-                if(life <= 0) {
-                    active = false;
-                    document.getElementById('ov').style.display = 'flex';
-                    document.getElementById('ov').innerHTML = `
-                        <div style="color:#ff7675; font-weight:bold;">GAME OVER</div>
-                        <div style="font-size:12px; margin:5px;">SCORE: ${score}</div>
-                        <button onclick="start()">RETRY</button>
-                    `;
+            if(item.y > gCanvas.height-40 && item.y < gCanvas.height-10 && Math.abs(drawX - toruX) < 20) {
+                if(item.type==='gold') { lives = Math.min(lives+1, 3); confetti({particleCount:30, spread:50, origin:{y:0.6}}); }
+                score += 20; items.splice(i,1); updateUI();
+            } else if(item.y > gCanvas.height) {
+                items.splice(i,1);
+                if(item.type==='normal') lives--;
+                updateUI();
+                if(lives <= 0) {
+                    gameActive=false; clearInterval(gameInterval);
+                    document.getElementById('game-overlay').style.display='flex';
+                    document.getElementById('status-text').innerText = `FINISH (${score}점)`;
                 }
             }
-        }
-        animId = requestAnimationFrame(loop);
+        });
+        requestAnimationFrame(gameLoop);
     }
 
-    // 윈도우 크기 변경 대응
-    window.addEventListener('resize', () => { if(active) resize(); });
+    function readText(file) {
+        const modal = document.getElementById('text-modal');
+        const body = document.getElementById('text-body');
+        modal.style.display='flex';
+        body.innerText="로딩 중...";
+        fetch(file).then(r=>r.text()).then(t=>body.innerText=t).catch(()=>body.innerText="내용을 불러올 수 없습니다.");
+    }
 </script>
 </body>
 </html>
