@@ -175,37 +175,45 @@
         if(gameTime % 800 === 0) level++; 
 
         bbs4.forEach((b, i) => { 
-            // 시트에서 자를 영역 계산
-            const fw = imgWater.width / sheetConf.cols;
-            const fh = imgWater.height / sheetConf.rows;
-            const sx = (b.frame % sheetConf.cols) * fw;
-            const sy = Math.floor(b.frame / sheetConf.cols) * fh;
+            // [중요 수정] 이미지가 로드되지 않았을 때를 대비한 방어 코드
+            if (imgWater.complete && imgWater.width > 0) {
+                const fw = imgWater.width / sheetConf.cols;
+                const fh = imgWater.height / sheetConf.rows;
+                const sx = (b.frame % sheetConf.cols) * fw;
+                const sy = Math.floor(b.frame / sheetConf.cols) * fh;
 
-            if(b.p === 0) { 
-                // 1. 상승 및 프레임 순환
-                b.y -= b.s; 
-                if(gameTime % 10 === 0) b.frame = (b.frame + 1) % sheetConf.total; 
-
-                if(imgWater.complete) {
+                if(b.p === 0) { 
+                    b.y -= b.s; 
+                    if(gameTime % 10 === 0) b.frame = (b.frame + 1) % sheetConf.total; 
+                    
+                    // 이미지 그리기
                     ctx4.drawImage(imgWater, sx, sy, fw, fh, b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
-                } else {
-                    ctx4.beginPath(); ctx4.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx4.stroke();
-                }
 
-                if(b.y < -20) { 
-                    life--; bbs4.splice(i,1); checkLife(4); 
-                } 
-            } else { 
-                // 2. 터짐 (시트의 마지막 프레임 고정 및 확대)
-                b.p--; 
-                const lastSx = (sheetConf.total - 1) * fw;
-                if(imgWater.complete) {
+                    if(b.y < -20) { 
+                        life--; bbs4.splice(i,1); checkLife(4); 
+                    } 
+                } else { 
+                    // 터짐 효과
+                    b.p--; 
+                    const lastSx = (sheetConf.total - 1) * fw;
                     ctx4.globalAlpha = b.p / 10;
                     ctx4.drawImage(imgWater, lastSx, 0, fw, fh, b.x - b.r - (10-b.p), b.y - b.r - (10-b.p), (b.r * 2) + (10-b.p)*2, (b.r * 2) + (10-b.p)*2);
                     ctx4.globalAlpha = 1.0;
+                    if(b.p <= 0) bbs4.splice(i,1); 
                 }
-                if(b.p <= 0) bbs4.splice(i,1); 
-            } 
+            } else {
+                // 이미지가 아직 로드되지 않았다면 임시로 원이라도 그려서 작동 확인
+                if(b.p === 0) {
+                    b.y -= b.s;
+                    ctx4.beginPath();
+                    ctx4.arc(b.x, b.y, b.r, 0, Math.PI*2);
+                    ctx4.strokeStyle = "lightblue";
+                    ctx4.stroke();
+                } else {
+                    b.p--;
+                    if(b.p <= 0) bbs4.splice(i,1);
+                }
+            }
         }); 
         
         document.getElementById('s4').innerText = score;
