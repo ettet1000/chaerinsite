@@ -3,92 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>토루 월드 V5.7 | 레이아웃 정밀 제어</title>
+    <title>토루 월드 V5.8 | 액정 정밀 매핑</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         :root { 
             --p: #ff9a9e; --pd: #ff7675; --txt: #5d4037; --lcd-bg: #fdf5e6; 
-            
-            /* --- [여기서 부모 대비 자식 화면의 크기와 위치를 지정하세요] --- */
-            --lcd-w: 285px;      /* 액정 가로 너비 */
-            --lcd-h: 375px;      /* 액정 세로 높이 */
-            --lcd-bottom: 315px; /* 부모 바닥(bottom)에서부터의 거리 (수정 가능) */
-            
-            /* 게임 내부 설정 */
-            --bubble-r: 25px;    
-            --game-ground-h: 20px; /* 게임 내 캐릭터 발 위치 */
+            --bubble-r: 25px;
+            --game-ground-h: 20px;
         }
         
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background-color: #1a1a1a; overflow: hidden; font-family: sans-serif; }
         
-        /* 부모 컨테이너: 기기 배경 */
+        /* [핵심] 부모 컨테이너: 장난감 기기 비율 유지 */
         #main-container { 
             position: relative; 
-            height: 95vh; 
-            aspect-ratio: 673 / 1024; 
-            max-width: 100vw; 
+            height: 98vh; /* 화면 높이에 맞춤 */
+            aspect-ratio: 673 / 1024; /* 원본 이미지 비율 */
+            background: url('toy_device.jpg') no-repeat center center;
+            background-size: contain;
         }
         
-        #device-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; z-index: 1; pointer-events: none; }
-        
-        /* 자식 화면: 실제 게임 액정 */
+        /* [핵심] 자식 화면: 장난감 액정 구멍에 정확히 매핑 */
         #game-screen { 
             position: absolute; 
-            left: 50%;
-            transform: translateX(-50%); /* 가로 중앙 정렬 */
-            
-            /* [핵심 수정] 바닥 위치와 높이를 직접 지정 */
-            bottom: var(--lcd-bottom);
-            width: var(--lcd-w);
-            height: var(--lcd-h);
+            /* 이미지 내부의 액정 위치 (퍼센트로 정밀 조정) */
+            top: 31.2%; 
+            left: 28.8%; 
+            width: 42.4%; 
+            height: 36.5%; 
             
             background-color: var(--lcd-bg); 
             z-index: 10; 
             overflow: hidden; 
-            border-radius: 4px; 
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.1); 
+            display: flex;
+            flex-direction: column;
+            /* 둥근 모서리가 있다면 조정 */
+            border-radius: 2px;
         }
 
-        /* 뷰 및 카드 공통 스타일 */
-        .view { display: none; opacity: 0; padding: 10px; width: 100%; height: 100%; box-sizing: border-box; flex-direction: column; justify-content: center; }
+        /* 내부 콘텐츠가 액정을 꽉 채우도록 설정 */
+        .view { display: none; opacity: 0; width: 100%; height: 100%; box-sizing: border-box; flex-direction: column; padding: 5%; }
         .view.active { display: flex; opacity: 1; }
-        .card { background: rgba(255,255,255,0.9); border-radius: 12px; padding: 8px; text-align: center; border: 1px solid #eee; }
-        .btn { width: 100%; padding: 8px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 10px; margin-bottom: 5px; }
+        
+        .card { background: rgba(255,255,255,0.8); border-radius: 8px; padding: 5px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+        .btn { width: 100%; padding: 6px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 10px; margin-bottom: 4px; }
         .btn-primary { background: linear-gradient(135deg, var(--p), var(--pd)); color: white; }
-        .btn-sub { background: #8d6e63; color: white; margin-top: 5px; }
         
-        /* 캔버스 영역: 자식 화면 높이에 맞춰 유동적으로 조절 가능 */
-        .canvas-holder { position: relative; width: 100%; height: 60%; background: #fff; border-radius: 8px; overflow: hidden; border: 2px solid #ffcad4; margin: 5px 0; }
-        canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+        /* 캔버스가 액정 내에서 최대 크기로 표현되도록 함 */
+        .canvas-holder { position: relative; width: 100%; flex-grow: 1; background: #fff; border-radius: 5px; overflow: hidden; border: 1px solid #ffcad4; margin: 3px 0; }
+        canvas { width: 100%; height: 100%; display: block; }
         
-        .game-ov { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
-        .ui-row { display: flex; justify-content: space-between; font-size: 9px; font-weight: bold; color: var(--pd); padding-bottom: 2px; }
+        .ui-row { display: flex; justify-content: space-between; font-size: 8px; font-weight: bold; color: var(--pd); margin-bottom: 2px; }
+        .game-ov { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; font-size: 10px; }
     </style>
 </head>
 <body>
 
 <div id="main-container">
-    <img src="toy_device.jpg" id="device-bg" onerror="this.style.backgroundColor='#ffcad4'">
     <div id="game-screen">
         <div id="view-menu" class="view active">
             <div class="card">
-                <h2 style="font-size:11px; margin:5px 0">🐰 토루의 미니게임</h2>
-                <button class="btn btn-primary" onclick="nav('view-g1')">하트 수집</button>
-                <button class="btn btn-primary" onclick="nav('view-g2')">당근 점프</button>
-                <button class="btn btn-primary" onclick="nav('view-g3')">당근 찾기</button>
-                <button class="btn btn-primary" onclick="nav('view-g4')">방울 팡팡</button>
+                <h2 style="font-size:10px; margin:2px 0">🐰 TORU WORLD</h2>
+                <button class="btn btn-primary" onclick="nav('view-g1')">HEART</button>
+                <button class="btn btn-primary" onclick="nav('view-g2')">JUMP</button>
+                <button class="btn btn-primary" onclick="nav('view-g3')">FIND</button>
+                <button class="btn btn-primary" onclick="nav('view-g4')">BUBBLE</button>
             </div>
         </div>
 
-        <div id="view-g1" class="view"><div class="ui-row"><span id="l1">❤️❤️❤️</span><span id="s1">0</span></div><div class="canvas-holder"><canvas id="c1"></canvas><div id="ov1" class="game-ov"><button class="btn btn-primary" style="width:auto" onclick="initG1()">START</button></div></div><button class="btn btn-sub" onclick="kill(); nav('view-menu')">EXIT</button></div>
-        <div id="view-g2" class="view"><div class="ui-row"><span id="l2">❤️❤️❤️</span><span id="s2">0</span></div><div class="canvas-holder" onclick="jump2()"><canvas id="c2"></canvas><div id="ov2" class="game-ov"><button class="btn btn-primary" style="width:auto" onclick="initG2()">START</button></div></div><button class="btn btn-sub" onclick="kill(); nav('view-menu')">EXIT</button></div>
-        <div id="view-g3" class="view"><div class="ui-row"><span id="l3">3개 찾기</span><span id="s3">0</span></div><div class="canvas-holder"><canvas id="c3"></canvas><div id="ov3" class="game-ov"><button class="btn btn-primary" style="width:auto" onclick="initG3()">START</button></div></div><button class="btn btn-sub" onclick="kill(); nav('view-menu')">EXIT</button></div>
-        <div id="view-g4" class="view"><div class="ui-row"><span id="l4">❤️❤️❤️</span><span id="s4">0</span></div><div class="canvas-holder"><canvas id="c4"></canvas><div id="ov4" class="game-ov"><button class="btn btn-primary" style="width:auto" onclick="initG4()">START</button></div></div><button class="btn btn-sub" onclick="kill(); nav('view-menu')">EXIT</button></div>
+        <div id="view-g1" class="view"><div class="ui-row"><span id="l1">❤️❤️❤️</span><span id="s1">0</span></div><div class="canvas-holder"><canvas id="c1"></canvas><div id="ov1" class="game-ov"><button class="btn btn-primary" onclick="initG1()">START</button></div></div><button class="btn" style="background:#8d6e63; color:white;" onclick="kill(); nav('view-menu')">EXIT</button></div>
+        <div id="view-g2" class="view"><div class="ui-row"><span id="l2">❤️❤️❤️</span><span id="s2">0</span></div><div class="canvas-holder" onclick="jump2()"><canvas id="c2"></canvas><div id="ov2" class="game-ov"><button class="btn btn-primary" onclick="initG2()">START</button></div></div><button class="btn" style="background:#8d6e63; color:white;" onclick="kill(); nav('view-menu')">EXIT</button></div>
+        <div id="view-g3" class="view"><div class="ui-row"><span id="l3">3개 찾기</span><span id="s3">0</span></div><div class="canvas-holder"><canvas id="c3"></canvas><div id="ov3" class="game-ov"><button class="btn btn-primary" onclick="initG3()">START</button></div></div><button class="btn" style="background:#8d6e63; color:white;" onclick="kill(); nav('view-menu')">EXIT</button></div>
+        <div id="view-g4" class="view"><div class="ui-row"><span id="l4">❤️❤️❤️</span><span id="s4">0</span></div><div class="canvas-holder"><canvas id="c4"></canvas><div id="ov4" class="game-ov"><button class="btn btn-primary" onclick="initG4()">START</button></div></div><button class="btn" style="background:#8d6e63; color:white;" onclick="kill(); nav('view-menu')">EXIT</button></div>
     </div>
 </div>
 
 <script>
-    // JS 로직은 이전 V5.6과 동일하게 이미지 로드 및 바닥(game-ground-h) 좌표를 사용하여 무결성 유지
     let loop = null, active = false, itv = null, score = 0, life = 3;
     const imgBunny = new Image(); imgBunny.src = 'bunny.png';
     const imgHeart = new Image(); imgHeart.src = 'hearts.png';
@@ -99,17 +89,23 @@
     const bubbleRadius = getStyle('--bubble-r');
     const groundH = getStyle('--game-ground-h');
 
-    // ... (이하 모든 게임 로직 함수는 V5.6의 groundY 계산 로직과 동일하게 작동)
-    function drawToru(ctx, x, y) { if (imgBunny.complete && imgBunny.naturalWidth > 0) ctx.drawImage(imgBunny, x - 15, y - 20, 30, 30); else { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.ellipse(x, y, 12, 10, 0, 0, Math.PI*2); ctx.fill(); } }
     function nav(id) { kill(); document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); gsap.fromTo(`#${id}`, {opacity:0}, {opacity:1, duration:0.3}); }
     function kill() { active = false; if(loop) cancelAnimationFrame(loop); if(itv) clearInterval(itv); document.querySelectorAll('.game-ov').forEach(ov => ov.style.display = 'flex'); }
     function updateUI(idx) { if(idx===3) document.getElementById('s3').innerText = `남은:${3-score}`; else { document.getElementById(`s${idx}`).innerText = score; document.getElementById(`l${idx}`).innerText = "❤️".repeat(Math.max(0, life)); } }
-    function checkGameOver(idx) { if (life <= 0) { kill(); document.getElementById(`ov${idx}`).innerHTML = `<div style="font-size:10px;margin-bottom:5px">GAME OVER</div><button class="btn btn-primary" style="width:auto" onclick="initG${idx}()">RETRY</button>`; return true; } return false; }
+    function checkGameOver(idx) { if (life <= 0) { kill(); document.getElementById(`ov${idx}`).innerHTML = `<div>GAME OVER</div><button class="btn btn-primary" onclick="initG${idx}()">RETRY</button>`; return true; } return false; }
 
-    // 대표로 GAME 4 (물방울) 로직만 표기 (나머지 게임도 내부적으로 groundH를 사용)
+    function drawToru(ctx, x, y) { if (imgBunny.complete && imgBunny.naturalWidth > 0) ctx.drawImage(imgBunny, x - 10, y - 15, 20, 20); else { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.ellipse(x, y, 8, 7, 0, 0, Math.PI*2); ctx.fill(); } }
+
+    // GAME 4 (방울) - 액정 크기에 맞춰 캔버스 리사이징 필수
     const c4 = document.getElementById('c4'), ctx4 = c4.getContext('2d');
     let bubbles4 = [];
-    function initG4() { c4.width = c4.offsetWidth; c4.height = c4.offsetHeight; active = true; score = 0; life = 3; bubbles4 = []; document.getElementById('ov4').style.display = 'none'; itv = setInterval(() => { if(active) bubbles4.push({x: Math.random()*c4.width, y: c4.height+10, r: bubbleRadius, pop: 0}) }, 800); loop4(); }
+    function initG4() { 
+        c4.width = c4.offsetWidth; c4.height = c4.offsetHeight; 
+        active = true; score = 0; life = 3; bubbles4 = []; 
+        document.getElementById('ov4').style.display = 'none'; 
+        itv = setInterval(() => { if(active) bubbles4.push({x: Math.random()*c4.width, y: c4.height+10, r: bubbleRadius * (c4.width/285), pop: 0}) }, 800); 
+        loop4(); 
+    }
     function loop4() {
         if(!active) return; ctx4.clearRect(0,0,c4.width, c4.height);
         bubbles4.forEach((b, i) => {
@@ -120,12 +116,12 @@
         updateUI(4); loop = requestAnimationFrame(loop4);
     }
     c4.onmousedown = e => { if(!active) return; const r = c4.getBoundingClientRect(), mx = e.clientX-r.left, my = e.clientY-r.top; bubbles4.forEach(b => { if(b.pop===0 && Math.hypot(mx-b.x, my-b.y)<b.r) { b.pop=10; score+=10; } }); };
-    
-    // GAME 1, 2, 3 로직은 이전과 동일하게 groundH를 사용하여 바닥을 잡습니다.
+
+    // GAME 1, 2, 3 로직은 내부적으로 동일하며, c.offsetWidth를 사용하여 액정 크기에 자동 대응함
     const c1 = document.getElementById('c1'), ctx1 = c1.getContext('2d');
     let tx1 = 50, hearts1 = [];
     function initG1() { c1.width = c1.offsetWidth; c1.height = c1.offsetHeight; active = true; score = 0; life = 3; hearts1 = []; tx1 = c1.width/2; document.getElementById('ov1').style.display = 'none'; itv = setInterval(() => { if(active) hearts1.push({x: Math.random()*c1.width, y: -20}) }, 1200); loop1(); }
-    function loop1() { if(!active) return; ctx1.clearRect(0,0,c1.width, c1.height); const gY = c1.height - groundH; drawToru(ctx1, tx1, gY); hearts1.forEach((h, i) => { h.y += 1.5; if(imgHeart.complete) ctx1.drawImage(imgHeart, h.x-10, h.y-10, 20, 20); if(Math.hypot(h.x-tx1, h.y-gY) < 20) { score += 10; hearts1.splice(i,1); } else if(h.y > c1.height) { life--; hearts1.splice(i,1); checkGameOver(1); } }); updateUI(1); loop = requestAnimationFrame(loop1); }
+    function loop1() { if(!active) return; ctx1.clearRect(0,0,c1.width, c1.height); const gY = c1.height - groundH; drawToru(ctx1, tx1, gY); hearts1.forEach((h, i) => { h.y += 1.5; if(imgHeart.complete) ctx1.drawImage(imgHeart, h.x-8, h.y-8, 16, 16); if(Math.hypot(h.x-tx1, h.y-gY) < 15) { score += 10; hearts1.splice(i,1); } else if(h.y > c1.height) { life--; hearts1.splice(i,1); checkGameOver(1); } }); updateUI(1); loop = requestAnimationFrame(loop1); }
     c1.onmousemove = e => tx1 = e.offsetX;
 </script>
 </body>
