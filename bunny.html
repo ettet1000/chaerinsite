@@ -3,44 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>토루 월드 V7.5 | 완전체 통합</title>
+    <title>토루 월드 V8.5 | 최종 통합본</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         :root { 
             --p: #ff9a9e; --pd: #ff7675; --txt: #5d4037; --lcd-bg: #fdf5e6; 
-            --glass: rgba(255, 255, 255, 0.85);
-            /* 크기 조절 변수 (냉정하게 여기서 조절하세요) */
-            --bunny-size: 30px;
-            --bubble-size: 45px;
-            --game-ground-h: 15px;
+            --glass: rgba(255, 255, 255, 0.9);
+            --bunny-size: 28px;
+            --bubble-size: 40px;
+            --game-ground-h: 12px;
         }
         
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background-color: #1a1a1a; overflow: hidden; font-family: sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background-color: #1a1a1a; overflow: hidden; font-family: -apple-system, sans-serif; }
+        
+        /* 장난감 기기 배경 레이아웃 */
         #main-container { position: relative; height: 98vh; aspect-ratio: 673 / 1024; background: url('toy_device.jpg') no-repeat center center; background-size: contain; }
-        #game-screen { position: absolute; top: 35.2%; left: 28.8%; width: 42.4%; height: 34.5%; background-color: var(--lcd-bg); z-index: 10; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; border-radius: 2px; }
+        
+        /* 액정 화면 영역 - 절대 스크롤 금지 */
+        #game-screen { 
+            position: absolute; top: 31.2%; left: 28.8%; width: 42.4%; height: 34.5%; 
+            background-color: var(--lcd-bg); z-index: 10; overflow: hidden; 
+            display: flex; flex-direction: column; box-sizing: border-box;
+            border-radius: 2px;
+        }
 
-        /* 뷰 제어 */
-        .view { display: none; width: 100%; height: 100%; box-sizing: border-box; padding: 8px; flex-direction: column; }
+        /* 뷰 및 UI 컴포넌트 */
+        .view { display: none; width: 100%; height: 100%; padding: 6px; box-sizing: border-box; flex-direction: column; justify-content: space-between; }
         .view.active { display: flex; }
 
-        /* UI 컴포넌트 */
-        .card { background: var(--glass); border-radius: 12px; padding: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.4); margin-bottom: 8px; text-align: center; }
-        .btn { width: 100%; padding: 10px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 10px; margin-bottom: 4px; }
-        .btn-primary { background: linear-gradient(135deg, var(--p) 0%, var(--pd) 100%); color: white; }
-        .btn-sub { background: #8d6e63; color: white; }
+        .card { background: var(--glass); border-radius: 8px; padding: 4px; border: 1px solid rgba(255,255,255,0.4); text-align: center; }
+        h2 { font-size: 11px; margin: 2px 0; color: var(--txt); }
+        h3 { font-size: 10px; margin: 2px 0; color: var(--pd); }
+        p { font-size: 8px; margin: 1px 0; }
 
-        /* 갤러리 및 리스트 */
-        .gallery-container { width: 100%; height: 80px; border-radius: 8px; overflow: hidden; }
+        .btn { width: 100%; padding: 6px 0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 9px; margin-bottom: 3px; }
+        .btn-primary { background: linear-gradient(135deg, var(--p), var(--pd)); color: white; }
+        .btn-sub { background: #8d6e63; color: white; margin-bottom: 0; }
+
+        /* 갤러리 슬라이드 */
+        .gallery-container { width: 100%; height: 65px; border-radius: 6px; overflow: hidden; margin: 2px 0; cursor: pointer; }
         .gallery-wrapper { display: flex; height: 100%; transition: 0.5s; }
         .gallery-item { min-width: 100%; height: 100%; }
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
-        .txt-item { padding: 6px; background: #fff; border-radius: 6px; margin-bottom: 4px; display: flex; justify-content: space-between; font-size: 9px; cursor: pointer; border: 1px solid #eee; }
 
-        /* 게임 공통 레이아웃 */
-        .canvas-holder { position: relative; width: 100%; flex-grow: 1; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #ffcad4; }
+        /* 수업 자료 리스트 */
+        .txt-list { flex-grow: 1; overflow-y: auto; margin-bottom: 4px; }
+        .txt-item { padding: 5px; background: #fff; border-radius: 5px; margin-bottom: 3px; display: flex; justify-content: space-between; font-size: 8px; border: 1px solid #eee; cursor: pointer; }
+
+        /* 게임 캔버스 및 레이어 */
+        .canvas-holder { position: relative; width: 100%; flex-grow: 1; background: #fff; border-radius: 6px; overflow: hidden; border: 1px solid #ffcad4; }
         canvas { width: 100%; height: 100%; display: block; touch-action: none; }
-        .ui-row { display: flex; justify-content: space-between; font-size: 8px; font-weight: bold; color: var(--pd); margin-bottom: 2px; }
-        .game-ov { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; font-size: 10px; }
+        .ui-row { display: flex; justify-content: space-between; font-size: 8px; font-weight: bold; color: var(--pd); margin-bottom: 2px; height: 10px; }
+        .game-ov { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; font-size: 9px; }
+
+        /* [수정] 수업자료 모달 - 최상위 레이어 */
+        #text-modal { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--lcd-bg); z-index: 9999; display: none; 
+            flex-direction: column; padding: 6px; box-sizing: border-box; 
+        }
+        .modal-content { 
+            flex-grow: 1; font-size: 8px; line-height: 1.4; overflow-y: auto; 
+            white-space: pre-wrap; background: #fff; padding: 8px; 
+            border-radius: 6px; border: 1px solid #ddd; color: #333; 
+        }
     </style>
 </head>
 <body>
@@ -49,19 +75,36 @@
     <div id="game-screen">
         
         <div id="view-home" class="view active">
-            <div class="card"><img src="bunny.png" style="width: 40px;"><h2>토루 월드</h2><p>IM CHAERIN X TORU</p></div>
-            <button class="btn btn-primary" onclick="nav('view-gallery')">🖼 사진 앨범</button>
-            <button class="btn btn-primary" onclick="nav('view-lesson')">📚 수업 자료</button>
-            <button class="btn btn-primary" onclick="nav('view-game-menu')">🎮 미니 게임</button>
+            <div class="card" style="margin-top: 10px;">
+                <img src="bunny.png" style="width: 35px;">
+                <h2>토루 월드</h2>
+                <p>IM CHAERIN X TORU</p>
+            </div>
+            <div style="margin-bottom: 5px;">
+                <button class="btn btn-primary" onclick="nav('view-gallery')">🖼 사진 앨범</button>
+                <button class="btn btn-primary" onclick="nav('view-lesson')">📚 수업 자료</button>
+                <button class="btn btn-primary" onclick="nav('view-game-menu')">🎮 미니 게임</button>
+            </div>
         </div>
 
         <div id="view-gallery" class="view">
-            <div class="card"><div class="gallery-container" onclick="nextSlide()"><div class="gallery-wrapper" id="gallery-wrapper"><div class="gallery-item"><img src="1.jpg"></div><div class="gallery-item"><img src="2.jpg"></div><div class="gallery-item"><img src="3.jpg"></div></div></div><p>터치하여 다음 사진</p></div>
+            <div class="card">
+                <h3>사진 앨범</h3>
+                <div class="gallery-container" onclick="nextSlide()">
+                    <div class="gallery-wrapper" id="gallery-wrapper">
+                        <div class="gallery-item"><img src="1.jpg"></div>
+                        <div class="gallery-item"><img src="2.jpg"></div>
+                        <div class="gallery-item"><img src="3.jpg"></div>
+                    </div>
+                </div>
+                <p style="font-size:7px;">터치 : 다음 사진</p>
+            </div>
             <button class="btn btn-sub" onclick="nav('view-home')">홈으로</button>
         </div>
+
         <div id="view-lesson" class="view">
-            <div class="card">
-                <h3 style="margin-top:0;">📝 토루의 수업시간</h3>
+            <h3 style="text-align:center;">📚 수업 자료</h3>
+            <div class="txt-list">
                 <div class="txt-item" onclick="readText('1.txt')"><span>수업시간1</span><span>〉</span></div>
                 <div class="txt-item" onclick="readText('2.txt')"><span>수업시간2</span><span>〉</span></div>
                 <div class="txt-item" onclick="readText('3.txt')"><span>수업시간3</span><span>〉</span></div>
@@ -71,81 +114,99 @@
         </div>
 
         <div id="view-game-menu" class="view">
-            <div class="card"><h2>게임 선택</h2></div>
-            <button class="btn btn-primary" onclick="nav('view-g1')">❤️ 하트 수집</button>
-            <button class="btn btn-primary" onclick="nav('view-g2')">🥕 당근 점프</button>
-            <button class="btn btn-primary" onclick="nav('view-g3')">🔍 당근 찾기</button>
-            <button class="btn btn-primary" onclick="nav('view-g4')">🫧 방울 팡팡</button>
+            <h3 style="text-align:center;">🎮 게임 선택</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                <button class="btn btn-primary" onclick="nav('view-g1')">❤️ 하트</button>
+                <button class="btn btn-primary" onclick="nav('view-g2')">🥕 점프</button>
+                <button class="btn btn-primary" onclick="nav('view-g3')">🔍 찾기</button>
+                <button class="btn btn-primary" onclick="nav('view-g4')">🫧 방울</button>
+            </div>
             <button class="btn btn-sub" onclick="nav('view-home')">홈으로</button>
         </div>
 
-        <div id="view-g1" class="view"><div class="ui-row"><span id="l1">❤️❤️❤️</span><span id="s1">0</span></div><div class="canvas-holder"><canvas id="c1"></canvas><div id="ov1" class="game-ov"><button class="btn btn-primary" onclick="initG1()">START</button></div></div><button class="btn btn-sub" onclick="kill(); nav('view-game-menu')">나가기</button></div>
-        <div id="view-g2" class="view"><div class="ui-row"><span id="l2">❤️❤️❤️</span><span id="s2">0</span></div><div class="canvas-holder" onmousedown="jump2()" ontouchstart="jump2()"><canvas id="c2"></canvas><div id="ov2" class="game-ov"><button class="btn btn-primary" onclick="initG2()">START</button></div></div><button class="btn btn-sub" onclick="kill(); nav('view-game-menu')">나가기</button></div>
-        <div id="view-g3" class="view"><div class="ui-row"><span id="l3">찾기</span><span id="s3">0</span></div><div class="canvas-holder"><canvas id="c3"></canvas><div id="ov3" class="game-ov"><button class="btn btn-primary" onclick="initG3()">START</button></div></div><button class="btn btn-sub" onclick="kill(); nav('view-game-menu')">나가기</button></div>
-        <div id="view-g4" class="view"><div class="ui-row"><span id="l4">❤️❤️❤️</span><span id="s4">0</span></div><div class="canvas-holder"><canvas id="c4"></canvas><div id="ov4" class="game-ov"><button class="btn btn-primary" onclick="initG4()">START</button></div></div><button class="btn btn-sub" onclick="kill(); nav('view-game-menu')">나가기</button></div>
+        <div id="view-g1" class="view"><div class="ui-row"><span id="l1">❤️❤️❤️</span><span id="s1">0</span></div><div class="canvas-holder"><canvas id="c1"></canvas><div id="ov1" class="game-ov"><button class="btn btn-primary" style="width:50px" onclick="initG1()">GO</button></div></div><button class="btn btn-sub" onclick="kill(); nav('view-game-menu')">EXIT</button></div>
+        <div id="view-g2" class="view"><div class="ui-row"><span id="l2">❤️❤️❤️</span><span id="s2">0</span></div><div class="canvas-holder" onmousedown="jump2()" ontouchstart="jump2()"><canvas id="c2"></canvas><div id="ov2" class="game-ov"><button class="btn btn-primary" style="width:50px" onclick="initG2()">GO</button></div></div><button class="btn btn-sub" onclick="kill(); nav('view-game-menu')">EXIT</button></div>
+        <div id="view-g3" class="view"><div class="ui-row"><span id="l3">당근찾기</span><span id="s3">0</span></div><div class="canvas-holder"><canvas id="c3"></canvas><div id="ov3" class="game-ov"><button class="btn btn-primary" style="width:50px" onclick="initG3()">GO</button></div></div><button class="btn btn-sub" onclick="kill(); nav('view-game-menu')">EXIT</button></div>
+        <div id="view-g4" class="view"><div class="ui-row"><span id="l4">❤️❤️❤️</span><span id="s4">0</span></div><div class="canvas-holder"><canvas id="c4"></canvas><div id="ov4" class="game-ov"><button class="btn btn-primary" style="width:50px" onclick="initG4()">GO</button></div></div><button class="btn btn-sub" onclick="kill(); nav('view-game-menu')">EXIT</button></div>
+
+        <div id="text-modal">
+            <h3 id="modal-title" style="font-size: 10px; margin: 0 0 4px 0; text-align: center;">문서 보기</h3>
+            <div class="modal-content" id="text-body"></div>
+            <button class="btn btn-primary" style="margin-top: 5px; height: 25px;" onclick="closeModal()">닫기</button>
+        </div>
 
     </div>
 </div>
 
 <script>
+    // [기본 시스템]
     let active = false, loop = null, itv = null, score = 0, life = 3;
     const imgBunny = new Image(); imgBunny.src = 'bunny.png';
     const imgHeart = new Image(); imgHeart.src = 'hearts.png';
     const imgCarrot = new Image(); imgCarrot.src = 'carrot.png';
     const imgWater = new Image(); imgWater.src = 'water_sheet.png';
 
-    const getS = (v) => parseInt(getComputedStyle(document.documentElement).getPropertyValue(v));
-    function nav(id) { kill(); document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-    function kill() { active = false; clearInterval(itv); cancelAnimationFrame(loop); document.querySelectorAll('.game-ov').forEach(ov => ov.style.display = 'flex'); }
-    function checkLife(idx) { if(life <= 0) { kill(); document.getElementById(`ov${idx}`).innerHTML = `OVER<br><button class="btn btn-primary" onclick="initG${idx}()">RETRY</button>`; return true; } return false; }
-
-    function drawB(ctx, x, y) {
-        const sz = getS('--bunny-size');
-        if (imgBunny.complete) ctx.drawImage(imgBunny, x - sz/2, y - sz, sz, sz);
-        else { ctx.fillStyle="#fff"; ctx.fillRect(x-10, y-20, 20, 20); }
+    function nav(id) { 
+        closeModal();
+        kill(); 
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); 
+        document.getElementById(id).classList.add('active'); 
     }
+    function kill() { active = false; clearInterval(itv); cancelAnimationFrame(loop); document.querySelectorAll('.game-ov').forEach(ov => ov.style.display = 'flex'); }
+    const getS = (v) => parseInt(getComputedStyle(document.documentElement).getPropertyValue(v));
+    function checkLife(idx) { if(life <= 0) { kill(); document.getElementById(`ov${idx}`).innerHTML = `<p style='margin:0'>OVER</p><button class="btn btn-primary" style="width:50px; padding:2px;" onclick="initG${idx}()">RETRY</button>`; return true; } return false; }
+    function drawB(ctx, x, y) { const sz = getS('--bunny-size'); if (imgBunny.complete) ctx.drawImage(imgBunny, x - sz/2, y - sz, sz, sz); }
 
-    // 1. 하트 수집
+    // [수정된 모달 로직]
+    function readText(file) {
+        const modal = document.getElementById('text-modal');
+        const body = document.getElementById('text-body');
+        const title = document.getElementById('modal-title');
+        title.innerText = file;
+        modal.style.display = 'flex';
+        body.innerText = "로딩 중...";
+
+        fetch(file)
+            .then(r => { if(!r.ok) throw new Error(); return r.text(); })
+            .then(t => { body.innerText = t; })
+            .catch(() => { 
+                body.innerText = "[안내] 파일을 읽을 수 없습니다.\n\nPC 로컬 환경(file://)인 경우 보안 문제로 동작하지 않습니다. Live Server를 이용하거나 웹에 업로드하세요."; 
+            });
+    }
+    function closeModal() { document.getElementById('text-modal').style.display = 'none'; }
+
+    // G1: 하트 수집
     const c1 = document.getElementById('c1'), ctx1 = c1.getContext('2d');
     let tx1 = 0, hts1 = [];
-    function initG1() { c1.width = c1.offsetWidth; c1.height = c1.offsetHeight; active = true; score = 0; life = 3; hts1 = []; tx1 = c1.width/2; document.getElementById('ov1').style.display = 'none'; itv = setInterval(() => { if(active) hts1.push({x:Math.random()*c1.width, y:-20}) }, 1000); loop1(); }
-    function loop1() { if(!active) return; ctx1.clearRect(0,0,c1.width, c1.height); const gY = c1.height - getS('--game-ground-h'); drawB(ctx1, tx1, gY); hts1.forEach((h,i)=>{ h.y+=1.8; if(imgHeart.complete) ctx1.drawImage(imgHeart, h.x-8, h.y-8, 16, 16); if(Math.hypot(h.x-tx1, h.y-gY)<20){score+=10; hts1.splice(i,1);} else if(h.y>c1.height){life--; hts1.splice(i,1); checkLife(1);} }); document.getElementById('s1').innerText = score; document.getElementById('l1').innerText = "❤️".repeat(life); loop = requestAnimationFrame(loop1); }
+    function initG1() { c1.width = c1.offsetWidth; c1.height = c1.offsetHeight; active = true; score = 0; life = 3; hts1 = []; tx1 = c1.width/2; document.getElementById('ov1').style.display = 'none'; itv = setInterval(() => { if(active) hts1.push({x:Math.random()*c1.width, y:-10}) }, 1200); loop1(); }
+    function loop1() { if(!active) return; ctx1.clearRect(0,0,c1.width, c1.height); const gY = c1.height - getS('--game-ground-h'); drawB(ctx1, tx1, gY); hts1.forEach((h,i)=>{ h.y+=1.5; if(imgHeart.complete) ctx1.drawImage(imgHeart, h.x-6, h.y-6, 12, 12); if(Math.hypot(h.x-tx1, h.y-gY)<15){score+=10; hts1.splice(i,1);} else if(h.y>c1.height){life--; hts1.splice(i,1); checkLife(1);} }); document.getElementById('s1').innerText = score; document.getElementById('l1').innerText = "❤️".repeat(life); loop = requestAnimationFrame(loop1); }
     c1.onmousemove = e => tx1 = e.offsetX;
     c1.ontouchmove = e => { tx1 = e.touches[0].clientX - c1.getBoundingClientRect().left; e.preventDefault(); };
 
-    // 2. 당근 점프
+    // G2: 당근 점프
     const c2 = document.getElementById('c2'), ctx2 = c2.getContext('2d');
     let ty2 = 0, dy2 = 0, obs2 = [];
-    function initG2() { c2.width = c2.offsetWidth; c2.height = c2.offsetHeight; active = true; score = 0; life = 3; obs2 = []; ty2 = c2.height - getS('--game-ground-h'); document.getElementById('ov2').style.display = 'none'; itv = setInterval(() => { if(active) obs2.push({x: c2.width, w: 15, h: 20}) }, 1800); loop2(); }
-    function jump2() { if(active && ty2 >= c2.height - getS('--game-ground-h') - 2) dy2 = -4.5; }
-    function loop2() { if(!active) return; ctx2.clearRect(0,0,c2.width, c2.height); const gY = c2.height - getS('--game-ground-h'); dy2 += 0.22; ty2 += dy2; if(ty2 > gY) { ty2 = gY; dy2 = 0; } drawB(ctx2, 40, ty2); obs2.forEach((o, i) => { o.x -= 2; if(imgCarrot.complete) ctx2.drawImage(imgCarrot, o.x, gY - o.h, o.w, o.h); if(o.x < 55 && o.x > 25 && ty2 > gY - o.h) { life--; obs2.splice(i, 1); checkLife(2); } if(o.x < -20) { score += 50; obs2.splice(i, 1); } }); document.getElementById('s2').innerText = score; document.getElementById('l2').innerText = "❤️".repeat(life); loop = requestAnimationFrame(loop2); }
+    function initG2() { c2.width = c2.offsetWidth; c2.height = c2.offsetHeight; active = true; score = 0; life = 3; obs2 = []; ty2 = c2.height - getS('--game-ground-h'); document.getElementById('ov2').style.display = 'none'; itv = setInterval(() => { if(active) obs2.push({x: c2.width, w: 12, h: 15}) }, 2000); loop2(); }
+    function jump2() { if(active && ty2 >= c2.height - getS('--game-ground-h') - 2) dy2 = -4; }
+    function loop2() { if(!active) return; ctx2.clearRect(0,0,c2.width, c2.height); const gY = c2.height - getS('--game-ground-h'); dy2 += 0.2; ty2 += dy2; if(ty2 > gY) { ty2 = gY; dy2 = 0; } drawB(ctx2, 30, ty2); obs2.forEach((o, i) => { o.x -= 1.8; if(imgCarrot.complete) ctx2.drawImage(imgCarrot, o.x, gY - o.h, o.w, o.h); if(o.x < 45 && o.x > 15 && ty2 > gY - o.h) { life--; obs2.splice(i, 1); checkLife(2); } if(o.x < -20) { score += 50; obs2.splice(i, 1); } }); document.getElementById('s2').innerText = score; document.getElementById('l2').innerText = "❤️".repeat(life); loop = requestAnimationFrame(loop2); }
 
-    // 3. 당근 찾기
+    // G3: 당근 찾기
     const c3 = document.getElementById('c3'), ctx3 = c3.getContext('2d');
     let cts3 = [];
     function initG3() { c3.width = c3.offsetWidth; c3.height = c3.offsetHeight; active = true; score = 0; cts3 = []; for(let i=0; i<3; i++) cts3.push({x: 20+Math.random()*60, y: 20+Math.random()*60, f: false}); document.getElementById('ov3').style.display = 'none'; rdr3(); }
-    function rdr3() { if(!active) return; ctx3.clearRect(0,0,c3.width, c3.height); const m = c3.width/2; cts3.forEach(d => { const sx = (d.x*m/100), sy = (d.y*c3.height/100); if(imgCarrot.complete) ctx3.drawImage(imgCarrot, sx-8, sy-10, 16, 20); if(d.f) ctx3.drawImage(imgCarrot, m+sx-8, sy-10, 16, 20); }); document.getElementById('s3').innerText = `남은:${3-score}`; if(score>=3) { kill(); document.getElementById('ov3').innerHTML = "CLEAR!<br><button class='btn btn-primary' onclick='initG3()'>RETRY</button>"; } }
-    c3.onmousedown = (e) => { const r = c3.getBoundingClientRect(), mx = e.clientX-r.left, my = e.clientY-r.top, m = c3.width/2; cts3.forEach(d => { if(!d.f && Math.hypot(mx-(m+d.x*m/100), my-(d.y*c3.height/100))<15) { d.f=true; score++; rdr3(); } }); };
+    function rdr3() { if(!active) return; ctx3.clearRect(0,0,c3.width, c3.height); const m = c3.width/2; cts3.forEach(d => { const sx = (d.x*m/100), sy = (d.y*c3.height/100); if(imgCarrot.complete) ctx3.drawImage(imgCarrot, sx-6, sy-8, 12, 16); if(d.f) ctx3.drawImage(imgCarrot, m+sx-6, sy-8, 12, 16); }); document.getElementById('s3').innerText = `남은:${3-score}`; if(score>=3) { kill(); document.getElementById('ov3').innerHTML = "CLEAR!<br><button class='btn btn-primary' style='width:50px' onclick='initG3()'>RETRY</button>"; } }
+    c3.onmousedown = (e) => { const r = c3.getBoundingClientRect(), mx = e.clientX-r.left, my = e.clientY-r.top, m = c3.width/2; cts3.forEach(d => { if(!d.f && Math.hypot(mx-(m+d.x*m/100), my-(d.y*c3.height/100))<12) { d.f=true; score++; rdr3(); } }); };
 
-    // 4. 방울 팡팡
+    // G4: 방울 팡팡
     const c4 = document.getElementById('c4'), ctx4 = c4.getContext('2d');
     let bbs4 = [];
-    function initG4() { c4.width = c4.offsetWidth; c4.height = c4.offsetHeight; active = true; score = 0; life = 3; bbs4 = []; document.getElementById('ov4').style.display = 'none'; itv = setInterval(() => { if(active) bbs4.push({x: Math.random()*c4.width, y: c4.height+20, r: getS('--bubble-size')/2, p: 0}) }, 900); loop4(); }
-    function loop4() { if(!active) return; ctx4.clearRect(0,0,c4.width, c4.height); bbs4.forEach((b, i) => { const dW = b.r*2, dH = (dW*1024)/768; if(b.p === 0) { b.y -= 1.2; if(imgWater.complete) ctx4.drawImage(imgWater, 0, 0, 768, 1024, b.x-b.r, b.y-dH/2, dW, dH); if(b.y < -20) { life--; bbs4.splice(i,1); checkLife(4); } } else { if(imgWater.complete) ctx4.drawImage(imgWater, 768, 0, 768, 1024, b.x-b.r, b.y-dH/2, dW, dH); b.p--; if(b.p<=0) bbs4.splice(i,1); } }); document.getElementById('s4').innerText = score; document.getElementById('l4').innerText = "❤️".repeat(life); loop = requestAnimationFrame(loop4); }
+    function initG4() { c4.width = c4.offsetWidth; c4.height = c4.offsetHeight; active = true; score = 0; life = 3; bbs4 = []; document.getElementById('ov4').style.display = 'none'; itv = setInterval(() => { if(active) bbs4.push({x: Math.random()*c4.width, y: c4.height+10, r: getS('--bubble-size')/2, p: 0}) }, 1000); loop4(); }
+    function loop4() { if(!active) return; ctx4.clearRect(0,0,c4.width, c4.height); bbs4.forEach((b, i) => { const dW = b.r*2, dH = (dW*1024)/768; if(b.p === 0) { b.y -= 1; if(imgWater.complete) ctx4.drawImage(imgWater, 0, 0, 768, 1024, b.x-b.r, b.y-dH/2, dW, dH); if(b.y < -10) { life--; bbs4.splice(i,1); checkLife(4); } } else { if(imgWater.complete) ctx4.drawImage(imgWater, 768, 0, 768, 1024, b.x-b.r, b.y-dH/2, dW, dH); b.p--; if(b.p<=0) bbs4.splice(i,1); } }); document.getElementById('s4').innerText = score; document.getElementById('l4').innerText = "❤️".repeat(life); loop = requestAnimationFrame(loop4); }
     c4.onmousedown = (e) => { const r = c4.getBoundingClientRect(), mx = e.clientX-r.left, my = e.clientY-r.top; bbs4.forEach(b => { if(b.p===0 && Math.hypot(mx-b.x, my-b.y)<b.r) { b.p=10; score+=10; } }); };
 
     // 갤러리 슬라이드
     let curSl = 0;
     function nextSlide() { curSl = (curSl + 1) % 3; document.getElementById('gallery-wrapper').style.transform = `translateX(-${curSl * 100}%)`; }
-
-    // 수업 자료 로드
-    function readText(file) {
-        const modal = document.getElementById('text-modal');
-        const body = document.getElementById('text-body');
-        modal.style.display = 'flex';
-        body.innerText = "로딩 중...";
-        fetch(file).then(r => r.text()).then(t => body.innerText = t).catch(() => body.innerText = "파일을 찾을 수 없습니다.");
-    }
 </script>
 
 </body>
