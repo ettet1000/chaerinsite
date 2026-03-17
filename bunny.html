@@ -95,7 +95,7 @@
     function checkGameOver(idx) {
         if (life <= 0) {
             kill();
-            document.getElementById(`ov${idx}`).innerHTML = `<div style="color:red">DEFEAT</div><div style="font-size:8px">SCORE: ${score}</div><button class="btn btn-primary" style="margin-top:5px" onclick="initG${idx}()">RETRY</button>`;
+            document.getElementById(`ov${idx}`).innerHTML = `<div style="color:red">게임끝</div><div style="font-size:9px">점수: ${score}</div><button class="btn btn-primary" style="margin-top:5px" onclick="initG${idx}()">다시하기</button>`;
             return true;
         }
         return false;
