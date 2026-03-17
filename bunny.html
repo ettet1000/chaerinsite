@@ -3,23 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>토루 월드 V6.0 | 완전 복구 에디션</title>
+    <title>토루 월드 V7.0 | 프로페셔널 게임 에디션</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         :root { 
             --p: #ff9a9e; --pd: #ff7675; --txt: #5d4037; --lcd-bg: #fdf5e6; 
-            
-            /* --- [여기서 크기를 자유롭게 조절하세요] --- */
-            --bunny-size: 40px;   /* 토끼 크기 */
-            --bubble-size: 70px;  /* 물방울 크기 (지름) */
-            --game-ground-h: 15px; /* 바닥 높이 */
+            --bunny-size: 40px;   
+            --bubble-size: 70px;  
+            --game-ground-h: 15px;
         }
         
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background-color: #1a1a1a; overflow: hidden; font-family: sans-serif; }
         #main-container { position: relative; height: 98vh; aspect-ratio: 673 / 1024; background: url('toy_device.jpg') no-repeat center center; background-size: contain; }
         
         #game-screen { 
-            position: absolute; top: 33.2%; left: 28.8%; width: 42.4%; height: 34.5%; 
+            position: absolute; top: 31.2%; left: 28.8%; width: 42.4%; height: 34.5%; 
             background-color: var(--lcd-bg); z-index: 10; overflow: hidden; display: flex; flex-direction: column;
         }
 
@@ -30,60 +28,101 @@
         .btn-primary { background: linear-gradient(135deg, var(--p), var(--pd)); color: white; }
         .canvas-holder { position: relative; width: 100%; flex-grow: 1; background: #fff; border-radius: 5px; overflow: hidden; border: 1px solid #ffcad4; margin: 3px 0; }
         canvas { width: 100%; height: 100%; display: block; touch-action: none; }
-        .ui-row { display: flex; justify-content: space-between; font-size: 8px; font-weight: bold; color: var(--pd); margin-bottom: 2px; }
+        
+        /* UI 레이아웃 강화 */
+        .ui-row { display: flex; justify-content: space-between; font-size: 9px; font-weight: bold; color: var(--pd); margin-bottom: 2px; align-items: center; }
+        .lv-tag { background: var(--pd); color: white; padding: 1px 4px; border-radius: 4px; font-size: 8px; }
+
+        /* 레벨업 이펙트 텍스트 */
+        #lvl-up-text { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 24px; font-weight: bold; color: #ffeb3b; text-shadow: 2px 2px 0 #000;
+            z-index: 200; pointer-events: none; opacity: 0; white-space: nowrap;
+        }
+
         .game-ov { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; font-size: 10px; }
     </style>
 </head>
 <body>
 
 <div id="main-container">
+    <div id="lvl-up-text">레벨업!</div>
     <div id="game-screen">
         <div id="view-menu" class="view active">
             <div class="card">
-                <h2 style="font-size:10px; margin:2px 0">🐰 TORU WORLD</h2>
-                <button class="btn btn-primary" onclick="nav('view-g1')">HEART</button>
-                <button class="btn btn-primary" onclick="nav('view-g2')">JUMP</button>
-                <button class="btn btn-primary" onclick="nav('view-g3')">FIND</button>
-                <button class="btn btn-primary" onclick="nav('view-g4')">BUBBLE</button>
+                <h2 style="font-size:10px; margin:2px 0">🐰 토루x채린랜드</h2>
+                <button class="btn btn-primary" onclick="nav('view-g1')">하트먹기</button>
+                <button class="btn btn-primary" onclick="nav('view-g2')">당근점프</button>
+                <button class="btn btn-primary" onclick="nav('view-g3')">찾기</button>
+                <button class="btn btn-primary" onclick="nav('view-g4')">물방울터트리기</button>
             </div>
         </div>
-        <div id="view-g1" class="view"><div class="ui-row"><span id="l1">❤️❤️❤️</span><span id="s1">0</span></div><div class="canvas-holder"><canvas id="c1"></canvas><div id="ov1" class="game-ov"><button class="btn btn-primary" onclick="initG1()">START</button></div></div><button class="btn" style="background:#8d6e63; color:white;" onclick="kill(); nav('view-menu')">EXIT</button></div>
-        <div id="view-g2" class="view"><div class="ui-row"><span id="l2">❤️❤️❤️</span><span id="s2">0</span></div><div class="canvas-holder" onmousedown="jump2()" ontouchstart="jump2()"><canvas id="c2"></canvas><div id="ov2" class="game-ov"><button class="btn btn-primary" onclick="initG2()">START</button></div></div><button class="btn" style="background:#8d6e63; color:white;" onclick="kill(); nav('view-menu')">EXIT</button></div>
-        <div id="view-g3" class="view"><div class="ui-row"><span id="l3">3개 찾기</span><span id="s3">0</span></div><div class="canvas-holder"><canvas id="c3"></canvas><div id="ov3" class="game-ov"><button class="btn btn-primary" onclick="initG3()">START</button></div></div><button class="btn" style="background:#8d6e63; color:white;" onclick="kill(); nav('view-menu')">EXIT</button></div>
-        <div id="view-g4" class="view"><div class="ui-row"><span id="l4">❤️❤️❤️</span><span id="s4">0</span></div><div class="canvas-holder"><canvas id="c4"></canvas><div id="ov4" class="game-ov"><button class="btn btn-primary" onclick="initG4()">START</button></div></div><button class="btn" style="background:#8d6e63; color:white;" onclick="kill(); nav('view-menu')">EXIT</button></div>
+
+        <div id="view-g1" class="view"><div class="ui-row"><span class="lv-tag">LV.<span id="lv1">1</span></span><span id="l1">❤️❤️❤️</span><span id="s1">0</span></div><div class="canvas-holder"><canvas id="c1"></canvas><div id="ov1" class="game-ov"><button class="btn btn-primary" onclick="initG1()">START</button></div></div><button class="btn" style="background:#8d6e63; color:white;" onclick="kill(); nav('view-menu')">EXIT</button></div>
+        <div id="view-g2" class="view"><div class="ui-row"><span class="lv-tag">LV.<span id="lv2">1</span></span><span id="l2">❤️❤️❤️</span><span id="s2">0</span></div><div class="canvas-holder" onmousedown="jump2()" ontouchstart="jump2()"><canvas id="c2"></canvas><div id="ov2" class="game-ov"><button class="btn btn-primary" onclick="initG2()">START</button></div></div><button class="btn" style="background:#8d6e63; color:white;" onclick="kill(); nav('view-menu')">EXIT</button></div>
+        <div id="view-g3" class="view"><div class="ui-row"><span class="lv-tag">LV.<span id="lv3">1</span></span><span id="l3">찾기</span><span id="s3">0</span></div><div class="canvas-holder"><canvas id="c3"></canvas><div id="ov3" class="game-ov"><button class="btn btn-primary" onclick="initG3()">START</button></div></div><button class="btn" style="background:#8d6e63; color:white;" onclick="kill(); nav('view-menu')">EXIT</button></div>
+        <div id="view-g4" class="view"><div class="ui-row"><span class="lv-tag">LV.<span id="lv4">1</span></span><span id="l4">❤️❤️❤️</span><span id="s4">0</span></div><div class="canvas-holder"><canvas id="c4"></canvas><div id="ov4" class="game-ov"><button class="btn btn-primary" onclick="initG4()">START</button></div></div><button class="btn" style="background:#8d6e63; color:white;" onclick="kill(); nav('view-menu')">EXIT</button></div>
     </div>
 </div>
 
 <script>
-    let loop = null, active = false, itv = null, score = 0, life = 3;
+    let loop = null, active = false, itv = null, score = 0, life = 3, level = 1;
     const imgBunny = new Image(); imgBunny.src = 'bunny.png';
     const imgHeart = new Image(); imgHeart.src = 'hearts.png';
     const imgCarrot = new Image(); imgCarrot.src = 'carrot.png';
     const imgWater = new Image(); imgWater.src = 'water_sheet.png';
 
     const getStyle = (v) => parseInt(getComputedStyle(document.documentElement).getPropertyValue(v));
-    
-    // 공통 함수
+
+    // 공통 유틸리티
     function nav(id) { kill(); document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); gsap.fromTo(`#${id}`, {opacity:0}, {opacity:1, duration:0.3}); }
     function kill() { active = false; if(loop) cancelAnimationFrame(loop); if(itv) clearInterval(itv); document.querySelectorAll('.game-ov').forEach(ov => ov.style.display = 'flex'); }
-    function updateUI(idx) { if(idx===3) document.getElementById('s3').innerText = `남은:${3-score}`; else { document.getElementById(`s${idx}`).innerText = score; document.getElementById(`l${idx}`).innerText = "❤️".repeat(Math.max(0, life)); } }
-    function checkGameOver(idx) { if (life <= 0) { kill(); document.getElementById(`ov${idx}`).innerHTML = `<div>GAME OVER</div><button class="btn btn-primary" onclick="initG${idx}()">RETRY</button>`; return true; } return false; }
+    
+    function levelUpEffect() {
+        level++;
+        const el = document.getElementById('lvl-up-text');
+        gsap.fromTo(el, {opacity: 1, scale: 0.5, y: 0}, {opacity: 0, scale: 1.5, y: -50, duration: 1, ease: "back.out"});
+        gsap.fromTo("#game-screen", {backgroundColor: "#fff"}, {backgroundColor: getStyle('--lcd-bg'), duration: 0.5});
+    }
+
+    function updateUI(idx) {
+        document.getElementById(`s${idx}`).innerText = score;
+        document.getElementById(`lv${idx}`).innerText = level;
+        if(idx !== 3) document.getElementById(`l${idx}`).innerText = "❤️".repeat(Math.max(0, life));
+        else document.getElementById(`s${idx}`).innerText = `남은:${Math.max(0, 3 + level - score)}`;
+    }
+
+    function checkGameOver(idx) {
+        if (life <= 0) {
+            kill();
+            document.getElementById(`ov${idx}`).innerHTML = `<div style="color:red">DEFEAT</div><div style="font-size:8px">SCORE: ${score}</div><button class="btn btn-primary" style="margin-top:5px" onclick="initG${idx}()">RETRY</button>`;
+            return true;
+        }
+        return false;
+    }
+
     function drawBunny(ctx, x, y) {
         const size = getStyle('--bunny-size');
         if (imgBunny.complete && imgBunny.naturalWidth > 0) ctx.drawImage(imgBunny, x - size/2, y - size, size, size);
         else { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.ellipse(x, y-size/2, size/3, size/4, 0, 0, Math.PI*2); ctx.fill(); }
     }
 
-    // GAME 2: JUMP (수정됨)
+    // GAME 2: JUMP (난이도 가속 적용)
     const c2 = document.getElementById('c2'), ctx2 = c2.getContext('2d');
     let ty2 = 0, dy2 = 0, obs2 = [];
     function initG2() { 
         c2.width = c2.offsetWidth; c2.height = c2.offsetHeight; 
-        active = true; score = 0; life = 3; obs2 = []; 
+        active = true; score = 0; life = 3; level = 1; obs2 = []; 
         ty2 = c2.height - getStyle('--game-ground-h');
         document.getElementById('ov2').style.display = 'none'; 
-        itv = setInterval(() => { if(active) obs2.push({x: c2.width, w: 20, h: 25}) }, 1800); 
+        startSpawn2();
         loop2(); 
+    }
+    function startSpawn2() {
+        if(itv) clearInterval(itv);
+        itv = setInterval(() => { 
+            if(active) obs2.push({x: c2.width, w: 20, h: 25, speed: 2 + (level * 0.5)}); 
+        }, Math.max(800, 2000 - (level * 200)));
     }
     function jump2() { if(active && ty2 >= c2.height - getStyle('--game-ground-h') - 2) dy2 = -4.5; }
     function loop2() {
@@ -92,23 +131,97 @@
         dy2 += 0.22; ty2 += dy2; if(ty2 > gY) { ty2 = gY; dy2 = 0; }
         drawBunny(ctx2, 40, ty2);
         obs2.forEach((o, i) => {
-            o.x -= 2;
+            o.x -= o.speed;
             if(imgCarrot.complete) ctx2.drawImage(imgCarrot, o.x, gY - o.h, o.w, o.h);
             if(o.x < 55 && o.x > 25 && ty2 > gY - o.h) { life--; obs2.splice(i, 1); checkGameOver(2); }
-            if(o.x < -20) { score += 50; obs2.splice(i, 1); }
+            if(o.x < -20) { 
+                score += 50; obs2.splice(i, 1); 
+                if(score > 0 && score % 200 === 0) { levelUpEffect(); startSpawn2(); }
+            }
         });
         updateUI(2); loop = requestAnimationFrame(loop2);
     }
 
-    // GAME 3: FIND (수정됨)
+    // GAME 4: BUBBLE (난이도 가속 적용)
+    const c4 = document.getElementById('c4'), ctx4 = c4.getContext('2d');
+    let bubbles4 = [];
+    function initG4() { 
+        c4.width = c4.offsetWidth; c4.height = c4.offsetHeight; 
+        active = true; score = 0; life = 3; level = 1; bubbles4 = []; 
+        document.getElementById('ov4').style.display = 'none'; 
+        startSpawn4();
+        loop4(); 
+    }
+    function startSpawn4() {
+        if(itv) clearInterval(itv);
+        itv = setInterval(() => { 
+            if(active) bubbles4.push({x: Math.random()*c4.width, y: c4.height+20, r: getStyle('--bubble-size')/2, pop: 0, speed: 1 + (level*0.3)}); 
+        }, Math.max(400, 1000 - (level * 100)));
+    }
+    function loop4() {
+        if(!active) return; ctx4.clearRect(0,0,c4.width, c4.height);
+        bubbles4.forEach((b, i) => {
+            const dW = b.r*2, dH = (dW*1024)/768;
+            if(b.pop === 0) {
+                b.y -= b.speed;
+                if(imgWater.complete) ctx4.drawImage(imgWater, 0, 0, 768, 1024, b.x-b.r, b.y-dH/2, dW, dH);
+                if(b.y < -20) { life--; bubbles4.splice(i,1); checkGameOver(4); }
+            } else {
+                if(imgWater.complete) ctx4.drawImage(imgWater, 768, 0, 768, 1024, b.x-b.r, b.y-dH/2, dW, dH);
+                b.pop--; if(b.pop<=0) bubbles4.splice(i,1);
+            }
+        });
+        if(score > 0 && score % 100 === 0 && score / 100 >= level) { levelUpEffect(); startSpawn4(); }
+        updateUI(4); loop = requestAnimationFrame(loop4);
+    }
+    c4.onmousedown = (e) => {
+        const r = c4.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+        bubbles4.forEach(b => { if(b.pop===0 && Math.hypot(mx-b.x, my-b.y) < b.r) { b.pop=10; score+=10; } });
+    };
+
+    // GAME 1: HEART
+    const c1 = document.getElementById('c1'), ctx1 = c1.getContext('2d');
+    let tx1 = 50, hearts1 = [];
+    function initG1() { 
+        c1.width = c1.offsetWidth; c1.height = c1.offsetHeight; active = true; score = 0; life = 3; level = 1; hearts1 = []; tx1 = c1.width/2;
+        document.getElementById('ov1').style.display = 'none'; 
+        startSpawn1();
+        loop1(); 
+    }
+    function startSpawn1() {
+        if(itv) clearInterval(itv);
+        itv = setInterval(() => { if(active) hearts1.push({x: Math.random()*c1.width, y: -20, speed: 1.2 + (level*0.3)}) }, Math.max(500, 1200 - (level*100)));
+    }
+    function loop1() {
+        if(!active) return; ctx1.clearRect(0,0,c1.width, c1.height);
+        const gY = c1.height - getStyle('--game-ground-h');
+        drawBunny(ctx1, tx1, gY);
+        hearts1.forEach((h, i) => {
+            h.y += h.speed; if(imgHeart.complete) ctx1.drawImage(imgHeart, h.x-8, h.y-8, 16, 16);
+            if(Math.hypot(h.x-tx1, h.y-gY) < 20) { 
+                score += 10; hearts1.splice(i,1); 
+                if(score > 0 && score % 100 === 0) { levelUpEffect(); startSpawn1(); }
+            } else if(h.y > c1.height) { life--; hearts1.splice(i,1); checkGameOver(1); }
+        });
+        updateUI(1); loop = requestAnimationFrame(loop1);
+    }
+    c1.onmousemove = e => tx1 = e.offsetX;
+    c1.ontouchmove = e => { tx1 = e.touches[0].clientX - c1.getBoundingClientRect().left; e.preventDefault(); };
+
+    // GAME 3: FIND (레벨마다 당근 개수 증가)
     const c3 = document.getElementById('c3'), ctx3 = c3.getContext('2d');
     let carrots3 = [];
     function initG3() { 
         c3.width = c3.offsetWidth; c3.height = c3.offsetHeight; 
-        active = true; score = 0; carrots3 = [];
-        for(let i=0; i<3; i++) carrots3.push({x: 20 + Math.random()*60, y: 20 + Math.random()*60, f: false});
+        active = true; score = 0; level = 1; carrots3 = [];
+        spawnCarrots3();
         document.getElementById('ov3').style.display = 'none'; 
         renderG3(); 
+    }
+    function spawnCarrots3() {
+        carrots3 = [];
+        const count = 3 + level - 1;
+        for(let i=0; i<count; i++) carrots3.push({x: 15 + Math.random()*70, y: 15 + Math.random()*70, f: false});
     }
     function renderG3() {
         if(!active) return; ctx3.clearRect(0,0,c3.width, c3.height);
@@ -119,7 +232,9 @@
             if(d.f && imgCarrot.complete) ctx3.drawImage(imgCarrot, m+sx-8, sy-10, 16, 20);
         });
         updateUI(3);
-        if(score >= 3) { kill(); document.getElementById('ov3').innerHTML = `<div>CLEAR!</div><button class="btn btn-primary" onclick="initG3()">RETRY</button>`; }
+        if(score >= carrots3.length) { 
+            levelUpEffect(); score = 0; spawnCarrots3(); renderG3(); 
+        }
     }
     c3.onmousedown = (e) => {
         if(!active) return;
@@ -127,56 +242,9 @@
         carrots3.forEach(d => {
             const targetX = m + (d.x * m / 100);
             const targetY = (d.y * c3.height / 100);
-            if(!d.f && Math.hypot(mx - targetX, my - targetY) < 20) { d.f = true; score++; renderG3(); }
+            if(!d.f && Math.hypot(mx - targetX, my - targetY) < 15) { d.f = true; score++; renderG3(); }
         });
     };
-
-    // GAME 4: BUBBLE (수정됨)
-    const c4 = document.getElementById('c4'), ctx4 = c4.getContext('2d');
-    let bubbles4 = [];
-    function initG4() { 
-        c4.width = c4.offsetWidth; c4.height = c4.offsetHeight; 
-        active = true; score = 0; life = 3; bubbles4 = []; 
-        document.getElementById('ov4').style.display = 'none'; 
-        itv = setInterval(() => { if(active) bubbles4.push({x: Math.random()*c4.width, y: c4.height+20, r: getStyle('--bubble-size')/2, pop: 0}) }, 800); 
-        loop4(); 
-    }
-    function loop4() {
-        if(!active) return; ctx4.clearRect(0,0,c4.width, c4.height);
-        bubbles4.forEach((b, i) => {
-            const dW = b.r*2, dH = (dW*1024)/768;
-            if(b.pop === 0) {
-                b.y -= 1.2;
-                if(imgWater.complete) ctx4.drawImage(imgWater, 0, 0, 768, 1024, b.x-b.r, b.y-dH/2, dW, dH);
-                if(b.y < -20) { life--; bubbles4.splice(i,1); checkGameOver(4); }
-            } else {
-                if(imgWater.complete) ctx4.drawImage(imgWater, 768, 0, 768, 1024, b.x-b.r, b.y-dH/2, dW, dH);
-                b.pop--; if(b.pop<=0) bubbles4.splice(i,1);
-            }
-        });
-        updateUI(4); loop = requestAnimationFrame(loop4);
-    }
-    c4.onmousedown = (e) => {
-        const r = c4.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
-        bubbles4.forEach(b => { if(b.pop===0 && Math.hypot(mx-b.x, my-b.y) < b.r) { b.pop=10; score+=10; } });
-    };
-
-    // GAME 1: HEART (기본 제공)
-    const c1 = document.getElementById('c1'), ctx1 = c1.getContext('2d');
-    let tx1 = 50, hearts1 = [];
-    function initG1() { c1.width = c1.offsetWidth; c1.height = c1.offsetHeight; active = true; score = 0; life = 3; hearts1 = []; tx1 = c1.width/2; document.getElementById('ov1').style.display = 'none'; itv = setInterval(() => { if(active) hearts1.push({x: Math.random()*c1.width, y: -20}) }, 1200); loop1(); }
-    function loop1() {
-        if(!active) return; ctx1.clearRect(0,0,c1.width, c1.height);
-        const gY = c1.height - getStyle('--game-ground-h');
-        drawBunny(ctx1, tx1, gY);
-        hearts1.forEach((h, i) => {
-            h.y += 1.5; if(imgHeart.complete) ctx1.drawImage(imgHeart, h.x-8, h.y-8, 16, 16);
-            if(Math.hypot(h.x-tx1, h.y-gY) < 20) { score += 10; hearts1.splice(i,1); }
-            else if(h.y > c1.height) { life--; hearts1.splice(i,1); checkGameOver(1); }
-        });
-        updateUI(1); loop = requestAnimationFrame(loop1);
-    }
-    c1.onmousemove = e => tx1 = e.offsetX;
 </script>
 </body>
 </html>
