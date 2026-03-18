@@ -34,7 +34,7 @@
 <div id="main-container">
     <div id="game-screen">
         <div id="view-home" class="view active">
-            <div style="text-align:center; padding: 10px 0;"><img src="bunny.png" style="width: 35px;"><h3>채린x토루 월드</h3></div>
+            <div style="text-align:center; padding: 10px 0;"><img src="bunny.png" style="width: 35px;" onerror="this.style.display='none'"><h3>채린x토루 월드</h3></div>
             <button class="btn btn-primary" onclick="nav('view-gallery')">🖼 사진 앨범</button>
             <button class="btn btn-primary" onclick="nav('view-lesson')">📚 수업 자료</button>
             <button class="btn btn-primary" onclick="nav('view-game-menu')">🎮 미니 게임</button>
@@ -49,10 +49,10 @@
             <button class="btn btn-sub" style="position:absolute; bottom:5px; left:5px; width:40px; padding:4px; font-size:7px;" onclick="nav('view-home')">닫기</button>
         </div>
 
-        <div id="view-g1" class="view"><div class="ui-row"><span id="l1">❤️❤️❤️</span><span id="s1">0</span></div><div class="canvas-holder"><canvas id="c1"></canvas><div id="ov1" class="game-ov"><button class="btn btn-primary" onclick="initG1()">시작</button></div></div><div class="touch-pad" id="pad1">스와이프하여 토끼 이동</div><button class="btn btn-sub" onclick="nav('view-game-menu')">나가기</button></div>
-        <div id="view-g2" class="view"><div class="ui-row"><span id="l2">❤️❤️❤️</span><span id="s2">0</span></div><div class="canvas-holder"><canvas id="c2"></canvas><div id="ov2" class="game-ov"><button class="btn btn-primary" onclick="initG2()">시작</button></div></div><div class="touch-pad" onmousedown="jump2()" ontouchstart="jump2()">터치하여 점프!</div><button class="btn btn-sub" onclick="nav('view-game-menu')">나가기</button></div>
-        <div id="view-g3" class="view"><div class="ui-row"><span id="l3">찾기</span><span id="s3">0/3</span></div><div class="canvas-holder"><canvas id="c3"></canvas><div id="ov3" class="game-ov"><button class="btn btn-primary" onclick="initG3()">시작</button></div></div><button class="btn btn-sub" onclick="nav('view-game-menu')">나가기</button></div>
-        <div id="view-g4" class="view"><div class="ui-row"><span id="l4">❤️❤️❤️</span><span id="s4">0</span></div><div class="canvas-holder"><canvas id="c4"></canvas><div id="ov4" class="game-ov"><button class="btn btn-primary" onclick="initG4()">시작</button></div></div><button class="btn btn-sub" onclick="nav('view-game-menu')">나가기</button></div>
+        <div id="view-g1" class="view"><div class="ui-row"><span id="lvl1">Lv.1</span><span id="l1">❤️❤️❤️</span><span id="s1">0</span></div><div class="canvas-holder"><canvas id="c1"></canvas><div id="ov1" class="game-ov"><button class="btn btn-primary" onclick="initG1()">시작</button></div></div><div class="touch-pad" id="pad1">스와이프하여 토끼 이동</div><button class="btn btn-sub" onclick="nav('view-game-menu')">나가기</button></div>
+        <div id="view-g2" class="view"><div class="ui-row"><span id="lvl2">Lv.1</span><span id="l2">❤️❤️❤️</span><span id="s2">0</span></div><div class="canvas-holder"><canvas id="c2"></canvas><div id="ov2" class="game-ov"><button class="btn btn-primary" onclick="initG2()">시작</button></div></div><div class="touch-pad" onmousedown="jump2()" ontouchstart="jump2()">터치하여 점프!</div><button class="btn btn-sub" onclick="nav('view-game-menu')">나가기</button></div>
+        <div id="view-g3" class="view"><div class="ui-row"><span id="lvl3">Lv.1</span><span id="l3">찾기</span><span id="s3">0/3</span></div><div class="canvas-holder"><canvas id="c3"></canvas><div id="ov3" class="game-ov"><button class="btn btn-primary" onclick="initG3()">시작</button></div></div><button class="btn btn-sub" onclick="nav('view-game-menu')">나가기</button></div>
+        <div id="view-g4" class="view"><div class="ui-row"><span id="lvl4">Lv.1</span><span id="l4">❤️❤️❤️</span><span id="s4">0</span></div><div class="canvas-holder"><canvas id="c4"></canvas><div id="ov4" class="game-ov"><button class="btn btn-primary" onclick="initG4()">시작</button></div></div><button class="btn btn-sub" onclick="nav('view-game-menu')">나가기</button></div>
 
         <div id="view-lesson" class="view">
             <h3 style="text-align:center; font-size:11px;">📚 수업 자료</h3>
@@ -84,154 +84,229 @@
 </div>
 
 <script>
-    let active = false, loop = null, itv = null, score = 0, life = 3;
+    let active = false, loop = null, frames = 0, score = 0, life = 3, level = 1;
+    let lvlAlpha = 0; // 레벨업 이펙트 투명도
+    
+    // 오디오 컨텍스트 (브라우저 정책 우회를 위해 지연 생성)
+    let audioCtx = null;
+    function playPop() {
+        if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.05);
+        gain.gain.setValueAtTime(1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
     const imgBunny = new Image(); imgBunny.src = 'bunny.png';
     const imgHeart = new Image(); imgHeart.src = 'hearts.png';
     const imgCarrot = new Image(); imgCarrot.src = 'carrot.png';
-    const imgWater = new Image(); imgWater.src = 'water_sheet.jpg'; // 확장자 수정
+    const imgWater = new Image(); imgWater.src = 'water_sheet.jpg';
 
     function nav(id) { kill(); document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-    function kill() { active = false; clearInterval(itv); cancelAnimationFrame(loop); document.querySelectorAll('.game-ov').forEach(ov => ov.style.display = 'flex'); }
+    function kill() { active = false; cancelAnimationFrame(loop); document.querySelectorAll('.game-ov').forEach(ov => ov.style.display = 'flex'); }
     function checkLife(idx) { if(life <= 0) { kill(); document.getElementById(`ov${idx}`).innerHTML = `<p>GAME OVER</p><button class="btn btn-primary" style="width:60px" onclick="initG${idx}()">다시 시작</button>`; return true; } return false; }
 
-    // 갤러리 로직 (확실하게 수정)
-    let curSl = 0;
-    function nextSl() {
-        const wrap = document.getElementById('gal-wrap');
-        curSl = (curSl + 1) % 3;
-        wrap.style.transform = `translateX(-${curSl * 100}%)`;
+    function drawLvlUp(ctx, w, h) {
+        if(lvlAlpha > 0) {
+            ctx.fillStyle = `rgba(255, 118, 117, ${lvlAlpha})`;
+            ctx.font = "bold 16px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("LEVEL UP!", w/2, h/2);
+            lvlAlpha -= 0.02;
+        }
     }
+
+    // 갤러리 로직
+    let curSl = 0;
+    function nextSl() { const wrap = document.getElementById('gal-wrap'); curSl = (curSl + 1) % 3; wrap.style.transform = `translateX(-${curSl * 100}%)`; }
 
     // 서버 텍스트 Fetch
     async function fetchText(file) {
-        const m = document.getElementById('modal');
-        const c = document.getElementById('modal-content');
-        m.style.display = 'flex';
-        c.innerText = "불러오는 중...";
-        try {
-            const r = await fetch(file + "?t=" + Date.now());
-            if(!r.ok) throw new Error();
-            const txt = await r.text();
-            c.innerText = txt;
-        } catch { c.innerText = "파일을 찾을 수 없습니다."; }
+        const m = document.getElementById('modal'); const c = document.getElementById('modal-content');
+        m.style.display = 'flex'; c.innerText = "불러오는 중...";
+        try { const r = await fetch(file + "?t=" + Date.now()); if(!r.ok) throw new Error(); c.innerText = await r.text(); } 
+        catch { c.innerText = "파일을 찾을 수 없습니다."; }
     }
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-    // G1: 하트 (조작패드 포함 전체 로직)
+    // G1: 하트
     const c1 = document.getElementById('c1'), ctx1 = c1.getContext('2d');
     let tx1 = 0, hts1 = [];
-    function initG1() { c1.width = c1.offsetWidth; c1.height = c1.offsetHeight; active = true; score = 0; life = 3; hts1 = []; tx1 = c1.width/2; document.getElementById('ov1').style.display='none'; itv = setInterval(() => { if(active) hts1.push({x:Math.random()*c1.width, y:-10, s:1.5}) }, 1000); loop1(); }
-    function loop1() { if(!active) return; ctx1.clearRect(0,0,c1.width,c1.height); const gY = c1.height-15; if(imgBunny.complete) ctx1.drawImage(imgBunny, tx1-15, gY-30, 30, 30); hts1.forEach((h,i)=>{ h.y+=h.s; if(imgHeart.complete) ctx1.drawImage(imgHeart,h.x-8,h.y-8,16,16); if(Math.hypot(h.x-tx1, h.y-gY+15)<20){score+=10; hts1.splice(i,1);} else if(h.y>c1.height){life--; hts1.splice(i,1); checkLife(1);} }); document.getElementById('s1').innerText=score; document.getElementById('l1').innerText="❤️".repeat(life); loop=requestAnimationFrame(loop1); }
+    function initG1() { c1.width = c1.offsetWidth; c1.height = c1.offsetHeight; active = true; score = 0; life = 3; level = 1; frames = 0; hts1 = []; tx1 = c1.width/2; document.getElementById('ov1').style.display='none'; loop1(); document.getElementById('lvl1').innerText=`Lv.${level}`; }
+    function loop1() {
+        if(!active) return;
+        ctx1.clearRect(0,0,c1.width,c1.height); frames++;
+        
+        if(frames % 600 === 0) { level++; lvlAlpha = 1.0; document.getElementById('lvl1').innerText=`Lv.${level}`; }
+        if(frames % Math.max(15, 60 - (level * 5)) === 0) hts1.push({x:Math.random()*c1.width, y:-10, s: 1 + (level*0.3)});
+
+        const gY = c1.height-15;
+        if(imgBunny.complete && imgBunny.width > 0) ctx1.drawImage(imgBunny, tx1-15, gY-30, 30, 30);
+        else { ctx1.fillStyle='gray'; ctx1.fillRect(tx1-15, gY-30, 30, 30); }
+
+        for(let i = hts1.length - 1; i >= 0; i--) {
+            let h = hts1[i]; h.y += h.s;
+            if(imgHeart.complete && imgHeart.width > 0) ctx1.drawImage(imgHeart, h.x-8, h.y-8, 16, 16);
+            else { ctx1.fillStyle='red'; ctx1.fillRect(h.x-8, h.y-8, 16, 16); }
+
+            if(Math.hypot(h.x-tx1, h.y-gY+15) < 20) { score+=10; hts1.splice(i,1); } 
+            else if(h.y > c1.height) { life--; hts1.splice(i,1); if(checkLife(1)) return; }
+        }
+        drawLvlUp(ctx1, c1.width, c1.height);
+        document.getElementById('s1').innerText=score; document.getElementById('l1').innerText="❤️".repeat(life);
+        loop=requestAnimationFrame(loop1);
+    }
     document.getElementById('pad1').addEventListener('touchmove', (e)=>{ let r=e.target.getBoundingClientRect(); tx1=((e.touches[0].clientX-r.left)/r.width)*c1.width; e.preventDefault(); }, {passive:false});
 
-    // G2: 점프 (전체 로직)
+    // G2: 점프
     const c2 = document.getElementById('c2'), ctx2 = c2.getContext('2d');
     let ty2 = 0, dy2 = 0, obs2 = [];
-    function initG2() { c2.width = c2.offsetWidth; c2.height = c2.offsetHeight; active = true; score = 0; life = 3; obs2 = []; ty2 = c2.height-15; document.getElementById('ov2').style.display='none'; itv = setInterval(() => { if(active) obs2.push({x:c2.width, w:15, h:15+Math.random()*10}) }, 1800); loop2(); }
-    function jump2() { if(active && ty2 >= c2.height-17) dy2 = -4.5; }
-    function loop2() { if(!active) return; ctx2.clearRect(0,0,c2.width,c2.height); const gY = c2.height-15; dy2 += 0.25; ty2 += dy2; if(ty2>gY){ty2=gY; dy2=0;} if(imgBunny.complete) ctx2.drawImage(imgBunny, 20, ty2-30, 30, 30); obs2.forEach((o,i)=>{ o.x-=2; if(imgCarrot.complete) ctx2.drawImage(imgCarrot, o.x, gY-o.h, 15, o.h); if(o.x<45 && o.x>15 && ty2>gY-o.h){life--; obs2.splice(i,1); checkLife(2);} if(o.x<-20){score+=50; obs2.splice(i,1);} }); document.getElementById('s2').innerText=score; document.getElementById('l2').innerText="❤️".repeat(life); loop=requestAnimationFrame(loop2); }
+    function initG2() { c2.width = c2.offsetWidth; c2.height = c2.offsetHeight; active = true; score = 0; life = 3; level = 1; frames = 0; obs2 = []; ty2 = c2.height-15; document.getElementById('ov2').style.display='none'; loop2(); document.getElementById('lvl2').innerText=`Lv.${level}`; }
+    function jump2() { if(active && ty2 >= c2.height-17) dy2 = -5; }
+    function loop2() {
+        if(!active) return;
+        ctx2.clearRect(0,0,c2.width,c2.height); frames++;
+
+        if(frames % 600 === 0) { level++; lvlAlpha = 1.0; document.getElementById('lvl2').innerText=`Lv.${level}`; }
+        if(frames % Math.max(40, 100 - (level * 8)) === 0) obs2.push({x:c2.width, w:15, h:15+Math.random()*15, s: 2 + (level*0.4)});
+
+        const gY = c2.height-15; dy2 += 0.25; ty2 += dy2; if(ty2>gY){ty2=gY; dy2=0;}
+        if(imgBunny.complete && imgBunny.width > 0) ctx2.drawImage(imgBunny, 20, ty2-30, 30, 30);
+        else { ctx2.fillStyle='gray'; ctx2.fillRect(20, ty2-30, 30, 30); }
+
+        for(let i = obs2.length - 1; i >= 0; i--) {
+            let o = obs2[i]; o.x -= o.s;
+            if(imgCarrot.complete && imgCarrot.width > 0) ctx2.drawImage(imgCarrot, o.x, gY-o.h, 15, o.h);
+            else { ctx2.fillStyle='orange'; ctx2.fillRect(o.x, gY-o.h, 15, o.h); }
+
+            if(o.x < 45 && o.x > 15 && ty2 > gY-o.h) { life--; obs2.splice(i,1); if(checkLife(2)) return; }
+            else if(o.x < -20) { score+=50; obs2.splice(i,1); }
+        }
+        drawLvlUp(ctx2, c2.width, c2.height);
+        document.getElementById('s2').innerText=score; document.getElementById('l2').innerText="❤️".repeat(life);
+        loop=requestAnimationFrame(loop2);
+    }
 
     // G3: 찾기
     const c3 = document.getElementById('c3'), ctx3 = c3.getContext('2d');
-    let cts3 = [];
-    function initG3() { c3.width = c3.offsetWidth; c3.height = c3.offsetHeight; active = true; score = 0; cts3 = []; for(let i=0; i<3; i++) cts3.push({x:15+Math.random()*70, y:15+Math.random()*70, f:false}); document.getElementById('ov3').style.display='none'; rdr3(); }
-    function rdr3() { if(!active) return; ctx3.clearRect(0,0,c3.width,c3.height); const m = c3.width/2; ctx3.fillStyle="#eee"; ctx3.fillRect(m,0,1,c3.height); cts3.forEach(d => { let sx = d.x*m/100, sy = d.y*c3.height/100; if(imgCarrot.complete) ctx3.drawImage(imgCarrot, sx-8, sy-10, 16, 20); if(d.f) ctx3.drawImage(imgCarrot, m+sx-8, sy-10, 16, 20); }); document.getElementById('s3').innerText = `${score}/3`; if(score>=3) { kill(); document.getElementById('ov3').innerHTML = "CLEAR!<br><button class='btn btn-primary' onclick='initG3()'>다시하기</button>"; } }
-    c3.onmousedown = (e) => { let r=c3.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top, m=c3.width/2; cts3.forEach(d => { if(!d.f && Math.hypot(mx-(m+d.x*m/100), my-(d.y*c3.height/100))<15) { d.f=true; score++; rdr3(); } }); };
+    let cts3 = [], req3 = 3;
+    function initG3() { c3.width = c3.offsetWidth; c3.height = c3.offsetHeight; active = true; score = 0; level = 1; req3 = 3; document.getElementById('ov3').style.display='none'; setupG3(); document.getElementById('lvl3').innerText=`Lv.${level}`; }
+    function setupG3() {
+        cts3 = []; score = 0; lvlAlpha = 1.0; document.getElementById('lvl3').innerText=`Lv.${level}`;
+        for(let i=0; i<req3; i++) cts3.push({x:10+Math.random()*80, y:10+Math.random()*80, f:false});
+        rdr3();
+    }
+    function rdr3() {
+        if(!active) return;
+        ctx3.clearRect(0,0,c3.width,c3.height); const m = c3.width/2; 
+        ctx3.fillStyle="#eee"; ctx3.fillRect(m,0,1,c3.height);
+        
+        let size = Math.max(10, 20 - (level*2));
+        cts3.forEach(d => {
+            let sx = d.x*m/100, sy = d.y*c3.height/100;
+            if(imgCarrot.complete && imgCarrot.width > 0) ctx3.drawImage(imgCarrot, sx-size/2, sy-size/2, size, size);
+            else { ctx3.fillStyle='orange'; ctx3.fillRect(sx-size/2, sy-size/2, size, size); }
+            if(d.f) {
+                if(imgCarrot.complete && imgCarrot.width > 0) ctx3.drawImage(imgCarrot, m+sx-size/2, sy-size/2, size, size);
+                else { ctx3.fillStyle='orange'; ctx3.fillRect(m+sx-size/2, sy-size/2, size, size); }
+            }
+        });
+        drawLvlUp(ctx3, c3.width, c3.height);
+        document.getElementById('s3').innerText = `${score}/${req3}`;
+        
+        if(score >= req3) { 
+            level++; req3++;
+            setTimeout(setupG3, 500); 
+        }
+    }
+    c3.onmousedown = (e) => { 
+        if(score >= req3) return;
+        let r=c3.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top, m=c3.width/2; 
+        let size = Math.max(10, 20 - (level*2));
+        cts3.forEach(d => { 
+            if(!d.f && Math.hypot(mx-(m+d.x*m/100), my-(d.y*c3.height/100)) < size) { d.f=true; score++; rdr3(); } 
+        }); 
+    };
 
-    // G4: 방울 (시트 애니메이션 버전)
+    // G4: 방울 (역순 반복 및 사운드/이펙트 추가)
     const c4 = document.getElementById('c4'), ctx4 = c4.getContext('2d');
     let bbs4 = [];
-    
-    // 시트 설정 (파일의 실제 구조에 따라 가로/세로 칸수를 조절하세요)
-    const sheetConf = {
-        cols: 4, // 가로 프레임 수
-        rows: 1, // 세로 프레임 수 (가로로만 길다면 1)
-        total: 4 // 전체 프레임 수
-    };
+    const sheetConf = { cols: 4, rows: 1, total: 4 };
 
     function initG4() { 
         c4.width = c4.offsetWidth; c4.height = c4.offsetHeight; 
-        active = true; score = 0; life = 3; level = 1; gameTime = 0; bbs4 = []; 
+        active = true; score = 0; life = 3; level = 1; frames = 0; bbs4 = []; 
         document.getElementById('ov4').style.display='none'; 
-        
-        if(itv) clearInterval(itv);
-        itv = setInterval(() => { 
-            if(active) bbs4.push({
-                x: 20 + Math.random() * (c4.width - 40), 
-                y: c4.height + 20, 
-                r: 18, 
-                frame: 0, // 현재 애니메이션 프레임
-                p: 0,     // 0: 정상, 0보다 크면 터지는 상태
-                s: 1 + (level * 0.2)
-            }) 
-        }, Math.max(500, 1000 - (level * 100))); 
+        document.getElementById('lvl4').innerText=`Lv.${level}`;
         loop4(); 
     }
 
     function loop4() { 
         if(!active) return; 
         ctx4.clearRect(0,0,c4.width,c4.height); 
-        gameTime++;
-        if(gameTime % 800 === 0) level++; 
-
-        bbs4.forEach((b, i) => { 
-            // [중요 수정] 이미지가 로드되지 않았을 때를 대비한 방어 코드
-            if (imgWater.complete && imgWater.width > 0) {
-                const fw = imgWater.width / sheetConf.cols;
-                const fh = imgWater.height / sheetConf.rows;
-                const sx = (b.frame % sheetConf.cols) * fw;
-                const sy = Math.floor(b.frame / sheetConf.cols) * fh;
-
-                if(b.p === 0) { 
-                    b.y -= b.s; 
-                    if(gameTime % 10 === 0) b.frame = (b.frame + 1) % sheetConf.total; 
-                    
-                    // 이미지 그리기
-                    ctx4.drawImage(imgWater, sx, sy, fw, fh, b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
-
-                    if(b.y < -20) { 
-                        life--; bbs4.splice(i,1); checkLife(4); 
-                    } 
-                } else { 
-                    // 터짐 효과
-                    b.p--; 
-                    const lastSx = (sheetConf.total - 1) * fw;
-                    ctx4.globalAlpha = b.p / 10;
-                    ctx4.drawImage(imgWater, lastSx, 0, fw, fh, b.x - b.r - (10-b.p), b.y - b.r - (10-b.p), (b.r * 2) + (10-b.p)*2, (b.r * 2) + (10-b.p)*2);
-                    ctx4.globalAlpha = 1.0;
-                    if(b.p <= 0) bbs4.splice(i,1); 
-                }
-            } else {
-                // 이미지가 아직 로드되지 않았다면 임시로 원이라도 그려서 작동 확인
-                if(b.p === 0) {
-                    b.y -= b.s;
-                    ctx4.beginPath();
-                    ctx4.arc(b.x, b.y, b.r, 0, Math.PI*2);
-                    ctx4.strokeStyle = "lightblue";
-                    ctx4.stroke();
-                } else {
-                    b.p--;
-                    if(b.p <= 0) bbs4.splice(i,1);
-                }
-            }
-        }); 
+        frames++;
         
+        if(frames % 600 === 0) { level++; lvlAlpha = 1.0; document.getElementById('lvl4').innerText=`Lv.${level}`; }
+        if(frames % Math.max(30, 100 - (level * 10)) === 0) {
+            bbs4.push({ x: 20 + Math.random() * (c4.width - 40), y: c4.height + 20, r: 18, frame: 0, p: 0, s: 1 + (level * 0.3) });
+        }
+
+        for(let i = bbs4.length - 1; i >= 0; i--) {
+            let b = bbs4[i];
+            if(b.p === 0) { 
+                b.y -= b.s; 
+                if(frames % 10 === 0) b.frame = (b.frame + 1) % sheetConf.total; 
+                
+                if (imgWater.complete && imgWater.width > 0) {
+                    const fw = imgWater.width / sheetConf.cols;
+                    const fh = imgWater.height / sheetConf.rows;
+                    const sx = (b.frame % sheetConf.cols) * fw;
+                    const sy = Math.floor(b.frame / sheetConf.cols) * fh;
+                    ctx4.drawImage(imgWater, sx, sy, fw, fh, b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
+                } else {
+                    ctx4.beginPath(); ctx4.arc(b.x, b.y, b.r, 0, Math.PI*2);
+                    ctx4.strokeStyle = "lightblue"; ctx4.lineWidth = 2; ctx4.stroke();
+                }
+
+                if(b.y < -20) { life--; bbs4.splice(i,1); if(checkLife(4)) return; } 
+            } else { 
+                b.p--; 
+                // 터지는 시각 효과 개선 (퍼져나가는 원)
+                ctx4.beginPath();
+                ctx4.arc(b.x, b.y, b.r + (10 - b.p) * 3, 0, Math.PI * 2);
+                ctx4.strokeStyle = `rgba(173, 216, 230, ${b.p / 10})`;
+                ctx4.lineWidth = 3;
+                ctx4.stroke();
+                
+                if(b.p <= 0) bbs4.splice(i,1); 
+            }
+        }
+        
+        drawLvlUp(ctx4, c4.width, c4.height);
         document.getElementById('s4').innerText = score;
         document.getElementById('l4').innerText = "❤️".repeat(life);
         loop = requestAnimationFrame(loop4); 
     }
 
-    // 터치 판정
     const handlePop = (ex, ey) => {
         let r = c4.getBoundingClientRect();
         let mx = ex - r.left; let my = ey - r.top;
-        bbs4.forEach(b => { 
+        for(let i = bbs4.length - 1; i >= 0; i--) {
+            let b = bbs4[i];
             if(b.p === 0 && Math.hypot(mx - b.x, my - b.y) < b.r + 15) { 
-                b.p = 10; score += 10; 
+                b.p = 10; score += 10; playPop(); break; 
             } 
-        });
+        }
     };
     c4.onmousedown = (e) => handlePop(e.clientX, e.clientY);
+    c4.addEventListener('touchstart', (e) => { e.preventDefault(); handlePop(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
 </script>
 </body>
 </html>
