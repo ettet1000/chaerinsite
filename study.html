@@ -3,40 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>3학년 공부방 - 모바일 특화</title>
+    <title>채린이의 공부방 with 토루</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            --primary-color: #4A90E2;
-            --success-color: #2ECC71;
-            --danger-color: #E74C3C;
-            --background-color: #F0F4F8;
+            --primary-color: #A78BFA; /* 따뜻한 파스텔 보라 계열로 톤 변경 */
+            --success-color: #34D399;
+            --danger-color: #F87171;
+            --warm-bg: #FFFBEB; /* 첫 화면 따뜻한 아이보리 배경 */
+            --quiz-bg: #F0F4F8;
         }
 
-        /* 모바일 스크롤 바운스 방지 및 전체 화면 고정 */
         * {
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent; /* 터치 시 파란 박스 제거 */
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-            background-color: var(--background-color);
+            background-color: var(--warm-bg);
             margin: 0;
             padding: 0;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             min-height: 100vh;
-            /* iOS 노치 디자인 및 하단 바 여백 대응 */
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
+            transition: background-color 0.3s ease;
         }
 
-        /* 앱(App)처럼 보이도록 전체 화면 최적화 */
         .app-wrapper {
             width: 100%;
-            max-width: 480px; /* 전형적인 모바일 타겟 width */
+            max-width: 480px;
             min-height: 100vh;
             background: white;
             display: flex;
@@ -45,18 +44,31 @@
             position: relative;
         }
 
+        /* 첫 화면 환영 메시지 스타일 */
+        .welcome-box {
+            text-align: center;
+            margin: 15px 0;
+            background: #FEF3C7;
+            padding: 16px;
+            border-radius: 20px;
+            border: 2px dashed #FBBF24;
+            font-size: 18px;
+            font-weight: bold;
+            color: #92400E;
+            word-break: keep-all;
+        }
+
         h1 { 
             color: var(--primary-color); 
-            margin: 20px 0 30px 0; 
-            font-size: calc(20px + 1.5vw); /* 가변 폰트 */
+            margin: 10px 0 20px 0; 
+            font-size: calc(22px + 1.5vw); 
             text-align: center;
         }
 
-        /* 모바일 터치 최적화 메뉴 (세로형 배치로 오터치 확률 0% 수렴) */
         .menu-list {
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 12px;
             width: 100%;
         }
 
@@ -69,33 +81,28 @@
             cursor: pointer;
             transition: transform 0.1s ease, background-color 0.2s;
             width: 100%;
-            /* 모바일 터치 반응 속도 향상 */
             touch-action: manipulation; 
         }
 
         .btn-category {
-            background-color: #F1F5F9;
-            color: #334155;
-            border: 2px solid #E2E8F0;
+            background-color: #F3F4F6;
+            color: #374151;
+            border: 2px solid #E5E7EB;
             text-align: left;
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        /* 모바일 하이라이트 효과 (눌렀을 때 살짝 들어가는 느낌) */
-        .btn:active {
-            transform: scale(0.97);
-        }
+        .btn:active { transform: scale(0.97); }
 
-        /* 퀴즈 레이아웃 */
         .hidden { display: none !important; }
         
         .quiz-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
-            color: #64748B;
+            margin-bottom: 15px;
+            color: #6B7280;
             font-size: 15px;
             font-weight: bold;
         }
@@ -105,22 +112,38 @@
             flex-direction: column;
             align-items: center;
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
-        .character-box {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: #EBF8FF;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 45px;
+        /* 토루 이미지 프레임 및 인터랙션 액션 정의 */
+        .character-frame {
+            width: 140px;
+            height: 140px;
+            border-radius: 24px;
+            overflow: hidden;
+            background: #F3F4F6;
+            border: 3px solid #E5E7EB;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .character-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        .character-box.bounce {
+        /* 정답 시 토루 바운스 효과 */
+        .character-frame.bounce {
             animation: bounce 0.4s infinite alternate;
+            border-color: var(--success-color);
+            box-shadow: 0 0 12px rgba(52, 211, 153, 0.5);
+        }
+
+        /* 오답 시 토루 시각 처리 */
+        .character-frame.dimmed {
+            filter: grayscale(60%);
+            border-color: var(--danger-color);
         }
 
         @keyframes bounce {
@@ -133,28 +156,26 @@
             font-weight: bold;
             width: 100%;
             padding: 20px;
-            background: #F8FAFC;
-            border: 2px solid #E2E8F0;
+            background: #F9FAFB;
+            border: 2px solid #E5E7EB;
             border-radius: 20px;
             word-break: keep-all;
             text-align: center;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
         }
 
-        /* 모바일 보기 목록 (터치 영역 극대화) */
         .options-box {
             display: flex;
             flex-direction: column;
             gap: 12px;
-            margin-top: auto; /* 하단 배치를 유도하여 한 손 조작 편의성 증대 */
+            margin-top: auto;
         }
 
         .btn-option {
-            background-color: #F8FAFC;
-            color: #1E293B;
+            background-color: #F9FAFB;
+            color: #1F2937;
             text-align: left;
-            border: 2px solid #E2E8F0;
-            padding: 18px 20px; /* 손가락 패드 면적 확보 */
+            border: 2px solid #E5E7EB;
+            padding: 18px 20px;
         }
         
         .btn-option.correct { background-color: #D1FAE5; border-color: var(--success-color); color: #065F46; }
@@ -172,6 +193,7 @@
             color: white;
             margin-top: 20px;
             padding: 18px;
+            box-shadow: 0 4px #7C3AED;
         }
     </style>
 </head>
@@ -179,7 +201,15 @@
 
 <div class="app-wrapper">
     <div id="menu-view">
-        <h1>✏️ 신나는 3학년 공부방</h1>
+        <h1>🧸 토루의 공부방</h1>
+        <div class="quiz-body" style="margin-bottom: 20px;">
+            <div class="character-frame">
+                <img src="./cinnamoroll.png" alt="토루">
+            </div>
+            <div class="welcome-box">
+                ✨ 안녕, 임채린! 오늘도 토루랑 같이 재밌게 공부해볼까? 원하는 과목을 골라줘!
+            </div>
+        </div>
         <div class="menu-list">
             <button class="btn btn-category" onclick="startQuiz('math_calc')"><span>🧮</span> 수학 연산</button>
             <button class="btn btn-category" onclick="startQuiz('math_fraction')"><span>🍰</span> 분수 공부</button>
@@ -196,27 +226,32 @@
         </div>
         
         <div class="quiz-body">
-            <div id="character" class="character-box">🐱</div>
+            <div id="toru-frame" class="character-frame">
+                <img src="./cinnamoroll.png" alt="토루">
+            </div>
             <div id="question" class="question-box">로딩 중...</div>
         </div>
         
         <div id="options" class="options-box">
             </div>
 
-        <button id="next-btn" class="btn btn-main hidden" onclick="nextQuestion()">다음 문제로 넘어가기 ▶</button>
+        <button id="next-btn" class="btn btn-main hidden" onclick="nextQuestion()">다음 문제로 가기 ▶</button>
     </div>
 
     <div id="result-view" class="hidden">
-        <h1>🎉 공부 끝! 수고했어요</h1>
-        <div class="question-box" id="result-score" style="font-size: 22px; border: none; background: transparent; margin: 40px 0;">0점</div>
-        <button class="btn btn-main" onclick="showMenu()">다른 과목 공부하기</button>
+        <h1>🎉 공부 끝!</h1>
+        <div class="quiz-body">
+            <div class="character-frame bounce">
+                <img src="./cinnamoroll.png" alt="토루">
+            </div>
+        </div>
+        <div class="question-box" id="result-score" style="font-size: 20px; border: none; background: transparent; margin: 20px 0;">0점</div>
+        <button class="btn btn-main" onclick="showMenu()">다른 과목 또 하기</button>
     </div>
 </div>
 
 <script>
-    // [기존 JS 로직 동일 유지 기조 아래 핵심 구동부만 매핑]
     const state = { dataset: null, currentCategory: '', questions: [], currentIndex: 0, score: 0, isAnswered: false };
-    const charStates = { wait: '🐱', correct: '😸', wrong: '😾' };
 
     async function initDataset() {
         try {
@@ -230,6 +265,7 @@
 
     function startQuiz(category) {
         if (!state.dataset || !state.dataset[category]) return;
+        document.body.style.backgroundColor = "var(--quiz-bg)"; // 퀴즈 진입 시 배경 전환
         state.currentCategory = category;
         state.questions = [...state.dataset[category]].sort(() => Math.random() - 0.5).slice(0, 5); 
         state.currentIndex = 0;
@@ -248,10 +284,8 @@
         state.isAnswered = false;
         document.getElementById('next-btn').classList.add('hidden');
         
-        const charEl = document.getElementById('character');
-        charEl.innerText = charStates.wait;
-        charEl.classList.remove('bounce');
-        charEl.style.background = '#EBF8FF';
+        const frame = document.getElementById('toru-frame');
+        frame.className = 'character-frame'; // 상태 리셋
         
         const currentQ = state.questions[state.currentIndex];
         document.getElementById('progress-text').innerText = `${state.currentIndex + 1} / ${state.questions.length}`;
@@ -275,19 +309,16 @@
         state.isAnswered = true;
 
         const buttons = document.getElementById('options').getElementsByTagName('button');
-        const charEl = document.getElementById('character');
+        const frame = document.getElementById('toru-frame');
 
         if (selectedValue === correctValue) {
             selectedButton.classList.add('correct');
             state.score++;
-            charEl.innerText = charStates.correct;
-            charEl.classList.add('bounce');
-            charEl.style.background = '#D1FAE5';
+            frame.classList.add('bounce'); // 정답 시 토루 신나게 바운스
             confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
         } else {
             selectedButton.classList.add('wrong');
-            charEl.innerText = charStates.wrong;
-            charEl.style.background = '#FEE2E2';
+            frame.classList.add('dimmed'); // 오답 시 토루 격려 모드(채도 감소)
             for (let btn of buttons) {
                 if (btn.innerText === correctValue) btn.classList.add('correct');
             }
@@ -303,13 +334,14 @@
     function showResult() {
         document.getElementById('quiz-view').classList.add('hidden');
         document.getElementById('result-view').classList.remove('hidden');
-        document.getElementById('result-score').innerText = `💯 5문제 중 ${state.score}문제를 맞혔어요!`;
+        document.getElementById('result-score').innerText = `💯 채린아, 5문제 중 ${state.score}문제를 맞혔어!`;
         if(state.score === 5) {
             confetti({ particleCount: 150, spread: 80 });
         }
     }
 
     function showMenu() {
+        document.body.style.backgroundColor = "var(--warm-bg)";
         document.getElementById('result-view').classList.add('hidden');
         document.getElementById('menu-view').classList.remove('hidden');
     }
