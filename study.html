@@ -2,8 +2,8 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>신나는 3학년 학습 사이트</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>3학년 공부방 - 모바일 특화</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
@@ -13,56 +13,82 @@
             --background-color: #F0F4F8;
         }
 
+        /* 모바일 스크롤 바운스 방지 및 전체 화면 고정 */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent; /* 터치 시 파란 박스 제거 */
+        }
+
         body {
             font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
             background-color: var(--background-color);
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            /* iOS 노치 디자인 및 하단 바 여백 대응 */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* 앱(App)처럼 보이도록 전체 화면 최적화 */
+        .app-wrapper {
+            width: 100%;
+            max-width: 480px; /* 전형적인 모바일 타겟 width */
+            min-height: 100vh;
+            background: white;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            padding: 24px 16px;
+            position: relative;
         }
 
-        .container {
-            max-width: 600px;
-            width: 100%;
-            background: white;
-            padding: 30px;
-            border-radius: 24px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        h1 { 
+            color: var(--primary-color); 
+            margin: 20px 0 30px 0; 
+            font-size: calc(20px + 1.5vw); /* 가변 폰트 */
             text-align: center;
-            box-sizing: border-box;
         }
 
-        h1 { color: var(--primary-color); margin-bottom: 30px; font-size: 28px; }
-
-        /* 메뉴 화면 */
-        .menu-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+        /* 모바일 터치 최적화 메뉴 (세로형 배치로 오터치 확률 0% 수렴) */
+        .menu-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
         }
 
         .btn {
-            padding: 18px 20px;
+            padding: 16px 20px;
             font-size: 18px;
             font-weight: bold;
             border: none;
             border-radius: 16px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: transform 0.1s ease, background-color 0.2s;
+            width: 100%;
+            /* 모바일 터치 반응 속도 향상 */
+            touch-action: manipulation; 
         }
 
         .btn-category {
-            background-color: #E2E8F0;
+            background-color: #F1F5F9;
             color: #334155;
-            box-shadow: 0 4px #CBD5E1;
+            border: 2px solid #E2E8F0;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .btn-category:hover { background-color: var(--primary-color); color: white; transform: translateY(-2px); box-shadow: 0 6px #1E40AF;}
-        .btn-category:active { transform: translateY(2px); box-shadow: 0 2px #1E40AF;}
+        /* 모바일 하이라이트 효과 (눌렀을 때 살짝 들어가는 느낌) */
+        .btn:active {
+            transform: scale(0.97);
+        }
 
-        /* 퀴즈 화면 */
+        /* 퀴즈 레이아웃 */
         .hidden { display: none !important; }
         
         .quiz-header {
@@ -70,106 +96,100 @@
             justify-content: space-between;
             margin-bottom: 20px;
             color: #64748B;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
         }
 
-        /* 캐릭터 및 대화창 배치 */
         .quiz-body {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 25px;
+            gap: 16px;
+            margin-bottom: 24px;
         }
 
         .character-box {
-            width: 120px;
-            height: 120px;
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
             background: #EBF8FF;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 60px; /* 이모지로 대체 */
-            transition: transform 0.3s ease;
+            font-size: 45px;
         }
 
-        /* 정답 시 캐릭터 점프 */
         .character-box.bounce {
-            animation: bounce 0.5s infinite alternate;
+            animation: bounce 0.4s infinite alternate;
         }
 
         @keyframes bounce {
             from { transform: translateY(0); }
-            to { transform: translateY(-15px); }
+            to { transform: translateY(-12px); }
         }
 
         .question-box {
-            font-size: 24px;
+            font-size: calc(18px + 1vw);
             font-weight: bold;
             width: 100%;
-            padding: 25px 20px;
+            padding: 20px;
             background: #F8FAFC;
             border: 2px solid #E2E8F0;
-            border-radius: 16px;
-            box-sizing: border-box;
+            border-radius: 20px;
             word-break: keep-all;
+            text-align: center;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
         }
 
+        /* 모바일 보기 목록 (터치 영역 극대화) */
         .options-box {
             display: flex;
             flex-direction: column;
             gap: 12px;
+            margin-top: auto; /* 하단 배치를 유도하여 한 손 조작 편의성 증대 */
         }
 
         .btn-option {
-            background-color: #F1F5F9;
+            background-color: #F8FAFC;
             color: #1E293B;
             text-align: left;
-            border: 3px solid transparent;
-            box-shadow: 0 4px #E2E8F0;
+            border: 2px solid #E2E8F0;
+            padding: 18px 20px; /* 손가락 패드 면적 확보 */
         }
-
-        .btn-option:hover:not(.disabled) { background-color: #E2E8F0; transform: translateX(4px); }
         
-        /* 피드백 애니메이션 */
-        .btn-option.correct { background-color: #D1FAE5; border-color: var(--success-color); color: #065F46; box-shadow: 0 4px #A7F3D0; transform: scale(1.02); }
-        .btn-option.wrong { background-color: #FEE2E2; border-color: var(--danger-color); color: #991B1B; box-shadow: 0 4px #FCA5A5; animation: shake 0.4s; }
-        .btn-option.disabled { cursor: default; }
+        .btn-option.correct { background-color: #D1FAE5; border-color: var(--success-color); color: #065F46; }
+        .btn-option.wrong { background-color: #FEE2E2; border-color: var(--danger-color); color: #991B1B; animation: shake 0.4s; }
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-8px); }
-            50% { transform: translateX(8px); }
-            75% { transform: translateX(-8px); }
+            25% { transform: translateX(-6px); }
+            50% { transform: translateX(6px); }
+            75% { transform: translateX(-6px); }
         }
 
         .btn-main {
             background-color: var(--primary-color);
             color: white;
-            margin-top: 25px;
-            width: 100%;
-            box-shadow: 0 4px #2563EB;
+            margin-top: 20px;
+            padding: 18px;
         }
-        .btn-main:hover { background-color: #2563EB; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="app-wrapper">
     <div id="menu-view">
         <h1>✏️ 신나는 3학년 공부방</h1>
-        <div class="menu-grid">
-            <button class="btn btn-category" onclick="startQuiz('math_calc')">🧮 수학 연산</button>
-            <button class="btn btn-category" onclick="startQuiz('math_fraction')">🍰 분수</button>
-            <button class="btn btn-category" onclick="startQuiz('math_geometry')">📐 도형</button>
-            <button class="btn btn-category" onclick="startQuiz('eng_word')">🦁 영단어</button>
-            <button class="btn btn-category" onclick="startQuiz('eng_expression')">💬 영어 표현</button>
+        <div class="menu-list">
+            <button class="btn btn-category" onclick="startQuiz('math_calc')"><span>🧮</span> 수학 연산</button>
+            <button class="btn btn-category" onclick="startQuiz('math_fraction')"><span>🍰</span> 분수 공부</button>
+            <button class="btn btn-category" onclick="startQuiz('math_geometry')"><span>📐</span> 도형 교실</button>
+            <button class="btn btn-category" onclick="startQuiz('eng_word')"><span>🦁</span> 필수 영단어</button>
+            <button class="btn btn-category" onclick="startQuiz('eng_expression')"><span>💬</span> 영어 회화</button>
         </div>
     </div>
 
-    <div id="quiz-view" class="hidden">
+    <div id="quiz-view" class="hidden" style="display: flex; flex-direction: column; flex: 1;">
         <div class="quiz-header">
             <span id="category-title">카테고리</span>
             <span id="progress-text">0 / 0</span>
@@ -177,59 +197,41 @@
         
         <div class="quiz-body">
             <div id="character" class="character-box">🐱</div>
-            <div id="question" class="question-box">질문 데이터 로딩 중...</div>
+            <div id="question" class="question-box">로딩 중...</div>
         </div>
         
         <div id="options" class="options-box">
             </div>
 
-        <button id="next-btn" class="btn btn-main hidden" onclick="nextQuestion()">다음 문제 ▶</button>
+        <button id="next-btn" class="btn btn-main hidden" onclick="nextQuestion()">다음 문제로 넘어가기 ▶</button>
     </div>
 
     <div id="result-view" class="hidden">
-        <h1>🎉 학습 완료!</h1>
-        <div class="question-box" id="result-score" style="font-size: 28px; border: none; background: transparent;">0점</div>
-        <button class="btn btn-main" onclick="showMenu()">처음으로 돌아가기</button>
+        <h1>🎉 공부 끝! 수고했어요</h1>
+        <div class="question-box" id="result-score" style="font-size: 22px; border: none; background: transparent; margin: 40px 0;">0점</div>
+        <button class="btn btn-main" onclick="showMenu()">다른 과목 공부하기</button>
     </div>
 </div>
 
 <script>
-    const state = {
-        dataset: null,
-        currentCategory: '',
-        questions: [],
-        currentIndex: 0,
-        score: 0,
-        isAnswered: false
-    };
+    // [기존 JS 로직 동일 유지 기조 아래 핵심 구동부만 매핑]
+    const state = { dataset: null, currentCategory: '', questions: [], currentIndex: 0, score: 0, isAnswered: false };
+    const charStates = { wait: '🐱', correct: '😸', wrong: '😾' };
 
-    // 고해상도 이모지 캐릭터 프로필
-    const charStates = {
-        wait: '🐱',
-        correct: '😸',
-        wrong: '😾'
-    };
-
-    // 최초 1회 전체 데이터 로드
     async function initDataset() {
         try {
             const response = await fetch('./dataset.json');
-            if (!response.ok) throw new Error('Network response was not ok');
+            if (!response.ok) throw new Error();
             state.dataset = await response.json();
         } catch (error) {
-            console.error('데이터셋 로드 실패:', error);
-            alert('dataset.json 파일을 찾을 수 없거나 서버 통신 오류가 발생했습니다.');
+            alert('dataset.json 파일 로드 실패');
         }
     }
 
-    // 퀴즈 시작 함수
     function startQuiz(category) {
         if (!state.dataset || !state.dataset[category]) return;
-
         state.currentCategory = category;
-        const rawQuestions = [...state.dataset[category]];
-        state.questions = rawQuestions.sort(() => Math.random() - 0.5).slice(0, 5); 
-        
+        state.questions = [...state.dataset[category]].sort(() => Math.random() - 0.5).slice(0, 5); 
         state.currentIndex = 0;
         state.score = 0;
 
@@ -237,16 +239,11 @@
         document.getElementById('result-view').classList.add('hidden');
         document.getElementById('quiz-view').classList.remove('hidden');
 
-        const titleMap = { 
-            math_calc: '🧮 수학 연산', math_fraction: '🍰 분수', 
-            math_geometry: '📐 도형', eng_word: '🦁 영단어', eng_expression: '💬 영어 표현' 
-        };
+        const titleMap = { math_calc: '🧮 수학 연산', math_fraction: '🍰 분수 공부', math_geometry: '📐 도형 교실', eng_word: '🦁 필수 영단어', eng_expression: '💬 영어 회화' };
         document.getElementById('category-title').innerText = titleMap[category];
-
         renderQuestion();
     }
 
-    // 문제 렌더링
     function renderQuestion() {
         state.isAnswered = false;
         document.getElementById('next-btn').classList.add('hidden');
@@ -273,71 +270,42 @@
         });
     }
 
-    // 정답 체크 및 효과 적용
     function checkAnswer(selectedButton, selectedValue, correctValue) {
         if (state.isAnswered) return;
         state.isAnswered = true;
 
         const buttons = document.getElementById('options').getElementsByTagName('button');
-        for (let btn of buttons) { btn.classList.add('disabled'); }
-
         const charEl = document.getElementById('character');
 
         if (selectedValue === correctValue) {
             selectedButton.classList.add('correct');
             state.score++;
-            
-            // 캐릭터 상태 변경 및 점프 애니메이션 추가
             charEl.innerText = charStates.correct;
             charEl.classList.add('bounce');
             charEl.style.background = '#D1FAE5';
-
-            // 고성능 폭죽 효과 (Canvas-Confetti 라이브러리 실행)
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 }
-            });
+            confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
         } else {
             selectedButton.classList.add('wrong');
-            
             charEl.innerText = charStates.wrong;
             charEl.style.background = '#FEE2E2';
-
             for (let btn of buttons) {
-                if (btn.innerText === correctValue) {
-                    btn.classList.add('correct');
-                }
+                if (btn.innerText === correctValue) btn.classList.add('correct');
             }
         }
-
         document.getElementById('next-btn').classList.remove('hidden');
     }
 
     function nextQuestion() {
         state.currentIndex++;
-        if (state.currentIndex < state.questions.length) { 
-            renderQuestion(); 
-        } else { 
-            showResult(); 
-        }
+        if (state.currentIndex < state.questions.length) { renderQuestion(); } else { showResult(); }
     }
 
     function showResult() {
         document.getElementById('quiz-view').classList.add('hidden');
         document.getElementById('result-view').classList.remove('hidden');
-        document.getElementById('result-score').innerText = `💯 ${state.questions.length}문제 중 ${state.score}문제를 맞혔어요!`;
-        
-        // 올클리어 시 특별 폭죽 효과
-        if(state.score === state.questions.length) {
-            let duration = 2 * 1000;
-            let end = Date.now() + duration;
-
-            (function frame() {
-                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } });
-                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } });
-                if (Date.now() < end) { requestAnimationFrame(frame); }
-            }());
+        document.getElementById('result-score').innerText = `💯 5문제 중 ${state.score}문제를 맞혔어요!`;
+        if(state.score === 5) {
+            confetti({ particleCount: 150, spread: 80 });
         }
     }
 
