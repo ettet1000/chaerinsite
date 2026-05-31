@@ -3,165 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>초등 3학년 교육과정 단독 구동 엔진</title>
+    <title>신나는 3학년 학습 사이트</title>
     <style>
         :root {
-            --slate-100: #f1f5f9;
-            --slate-800: #1e293b;
-            --blue-600: #2563eb;
-            --purple-600: #9333ea;
-            --emerald-600: #16a34a;
-            --rose-600: #dc2626;
-            --border: #e2e8f0;
+            --primary-color: #4A90E2;
+            --success-color: #2ECC71;
+            --danger-color: #E74C3C;
+            --background-color: #F8FAFC;
         }
-        body { font-family: system-ui, sans-serif; background-color: var(--slate-100); color: var(--slate-800); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .wrapper { background: #ffffff; border-radius: 12px; padding: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); width: 100%; max-width: 550px; text-align: center; }
-        .nav-title { font-size: 14px; font-weight: bold; margin-top: 20px; text-align: left; }
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
-        .btn { background: #fff; border: 1px solid var(--border); padding: 14px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 15px; text-align: left; }
-        .btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+        body {
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        h1 { color: var(--primary-color); margin-bottom: 30px; }
+
+        /* 메뉴 화면 */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-category {
+            background-color: #E2E8F0;
+            color: #334155;
+        }
+
+        .btn-category:hover { background-color: var(--primary-color); color: white; }
+
+        /* 퀴즈 화면 */
         .hidden { display: none !important; }
-        .screen-header { display: flex; justify-content: space-between; font-size: 13px; color: #64748b; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
-        .q-box { font-size: 24px; font-weight: 700; margin: 25px 0; min-height: 70px; display: flex; align-items: center; justify-content: center; }
-        .opt-list { display: flex; flex-direction: column; gap: 8px; }
-        .opt-btn { background: #fff; border: 1px solid var(--border); padding: 15px; border-radius: 6px; font-size: 16px; text-align: left; cursor: pointer; }
-        .opt-btn:hover:not([disabled]) { border-color: #94a3b8; background: #f8fafc; }
-        .alert-box { margin-top: 15px; font-size: 18px; font-weight: bold; min-height: 25px; }
-        .success { color: var(--emerald-600); }
-        .error { color: var(--rose-600); }
+        
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            color: #64748B;
+            font-size: 14px;
+        }
+
+        .question-box {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 30px 0;
+            min-height: 60px;
+            word-break: keep-all;
+        }
+
+        .options-box {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-option {
+            background-color: #F1F5F9;
+            color: #1E293B;
+            text-align: left;
+            border: 2px solid transparent;
+        }
+
+        .btn-option:hover { background-color: #E2E8F0; }
+        
+        /* 정오답 피드백 스타일 */
+        .btn-option.correct { background-color: #D1FAE5; border-color: var(--success-color); color: #065F46; }
+        .btn-option.wrong { background-color: #FEE2E2; border-color: var(--danger-color); color: #991B1B; }
+
+        .btn-main {
+            background-color: var(--primary-color);
+            color: white;
+            margin-top: 25px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
 
-<div class="wrapper">
-    <div id="dashboard">
-        <h2 style="margin: 0 0 5px 0; text-align: left;">🏫 초등 3학년 교육 과정</h2>
-        <p style="color: #64748b; font-size: 13px; margin: 0 0 25px 0; text-align: left;">로컬 또는 리모트의 `dataset.json` 파일에서 카테고리 자원을 정밀 Fetch합니다.</p>
-        
-        <div class="nav-title" style="color:var(--blue-600)">🔢 3학년 수학</div>
-        <div class="btn-grid">
-            <button class="btn" onclick="loadCategory('math_calc')">덧셈과 뺄셈</button>
-            <button class="btn" onclick="loadCategory('math_fraction')">분수와 소수</button>
-            <button class="btn" onclick="loadCategory('math_geometry')">평면도형</button>
-        </div>
-
-        <div class="nav-title" style="color:var(--purple-600)">🔤 3학년 영어</div>
-        <div class="btn-grid">
-            <button class="btn" onclick="loadCategory('eng_word')">기초 필수 어휘</button>
-            <button class="btn" onclick="loadCategory('eng_expressions')">생활 의사소통</button>
+<div class="container">
+    <div id="menu-view">
+        <h1>✏️ 3학년 공부방</h1>
+        <div class="menu-grid">
+            <button class="btn btn-category" onclick="startQuiz('math_calc')">🧮 수학 연산</button>
+            <button class="btn btn-category" onclick="startQuiz('math_fraction')">🍰 분수</button>
+            <button class="btn btn-category" onclick="startQuiz('math_geometry')">📐 도형</button>
+            <button class="btn btn-category" onclick="startQuiz('eng_word')">🦁 영단어</button>
+            <button class="btn btn-category" onclick="startQuiz('eng_expression')">💬 영어 표현</button>
         </div>
     </div>
 
-    <div id="stage" class="hidden">
-        <div class="screen-header">
-            <div>카테고리: <span id="current-cat-view" style="font-weight:bold; color:var(--blue-600);"></span></div>
-            <div>진행도: <span id="idx-view">0</span> / <span id="total-view">0</span></div>
+    <div id="quiz-view" class="hidden">
+        <div class="quiz-header">
+            <span id="category-title">카테고리</span>
+            <span id="progress-text">0 / 0</span>
         </div>
-        <div class="q-box" id="display-q">JSON 로딩 데이터 검증 중...</div>
-        <div class="opt-list" id="display-opts"></div>
-        <div class="alert-box" id="display-alert"></div>
-        <button class="btn" style="margin-top: 25px; width:100%; text-align:center; background:#e2e8f0;" onclick="exitToDashboard()">처음 화면으로</button>
+        
+        <div id="question" class="question-box">질문 데이터 로딩 중...</div>
+        
+        <div id="options" class="options-box">
+            </div>
+
+        <button id="next-btn" class="btn btn-main hidden" onclick="nextQuestion()">다음 문제</button>
+    </div>
+
+    <div id="result-view" class="hidden">
+        <h1>🎉 학습 완료!</h1>
+        <div class="question-box" id="result-score">0점</div>
+        <button class="btn btn-main" onclick="showMenu()">처음으로 돌아가기</button>
     </div>
 </div>
 
 <script>
-    // 동일 디렉토리 경로 상의 JSON 자원 지향
-    const JSON_DATA_URL = './dataset.json';
-    
-    const session = {
-        pool: [],
-        ptr: 0,
-        activeNode: null,
-        score: 0
+    // 상태 관리 객체
+    const state = {
+        dataset: null,
+        currentCategory: '',
+        questions: [],
+        currentIndex: 0,
+        score: 0,
+        isAnswered: false
     };
 
-    // 정적 JSON 파일을 다이렉트로 Fetch 파싱하는 핵심 아키텍처
-    async function loadCategory(targetKey) {
-        document.getElementById('dashboard').classList.add('hidden');
-        document.getElementById('stage').classList.remove('hidden');
-
-        document.getElementById('current-cat-view').innerText = targetKey;
-        document.getElementById('display-q').innerText = "JSON 파일 파싱 및 로드 중...";
-        document.getElementById('display-opts').innerHTML = '';
-        document.getElementById('display-alert').innerText = '';
-
+    // 최초 1회 전체 데이터 로드 (동일 서버 경로의 dataset.json 호출)
+    async function initDataset() {
         try {
-            // 외부 서버 통신 없이 동적 로컬 파일 패치 실행
-            const response = await fetch(JSON_DATA_URL);
-            if (!response.ok) throw new Error("JSON 파일 수신 거부 (상태 에러)");
-            
-            const fullData = await response.json();
-            const selectedDataset = fullData[targetKey];
-
-            if (selectedDataset && selectedDataset.length > 0) {
-                // 문제를 무작위로 섞음 (매 판 새로운 출제 확률 확보)
-                session.pool = [...selectedDataset].sort(() => 0.5 - Math.random());
-                session.ptr = 0;
-                session.score = 0;
-                renderPipeline();
-            } else {
-                throw new Error("해당 카테고리에 유효 데이터가 존재하지 않습니다.");
-            }
+            const response = await fetch('./dataset.json');
+            if (!response.ok) throw new Error('Network response was not ok');
+            state.dataset = await response.json();
         } catch (error) {
-            document.getElementById('display-q').innerHTML = `<span class="error">JSON 로드 실패.<br>대안: 웹 브라우저의 웹 서버 보안(CORS) 제한 또는 파일명을 확인하십시오.</span>`;
-            console.error(error);
+            console.error('데이터셋 로드 실패:', error);
+            alert('서버에서 문제 데이터를 불러오지 못했습니다. dataset.json 위치를 확인하세요.');
         }
     }
 
-    function renderPipeline() {
-        document.getElementById('display-alert').innerText = '';
-        document.getElementById('idx-view').innerText = session.ptr + 1;
-        document.getElementById('total-view').innerText = session.pool.length;
-
-        if (session.ptr >= session.pool.length) {
-            document.getElementById('display-q').innerText = `🎉 완료! 최종 점수: ${session.score} / ${session.pool.length}`;
-            document.getElementById('display-opts').innerHTML = '';
+    // 퀴즈 시작 함수 (무작위 5문항 추출하여 테스트 세트 생성)
+    function startQuiz(category) {
+        if (!state.dataset || !state.dataset[category]) {
+            alert('데이터가 아직 로드되지 않았거나 유효하지 않은 카테고리입니다.');
             return;
         }
 
-        session.activeNode = session.pool[session.ptr];
-        document.getElementById('display-q').innerText = session.activeNode.q;
+        state.currentCategory = category;
+        // 원본 배열 복사 후 셔플하여 상위 5개만 추출 (요구사항 및 문제 수에 따라 조절 가능)
+        const rawQuestions = [...state.dataset[category]];
+        state.questions = rawQuestions.sort(() => Math.random() - 0.5).slice(0, 5); 
+        
+        state.currentIndex = 0;
+        state.score = 0;
 
-        // 보기 4지선다 피셔-예이츠 25% 확률 정렬
-        const list = [...session.activeNode.o, session.activeNode.a];
-        for (let i = list.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [list[i], list[j]] = [list[j], list[i]];
-        }
+        document.getElementById('menu-view').classList.add('hidden');
+        document.getElementById('result-view').classList.add('hidden');
+        document.getElementById('quiz-view').classList.remove('hidden');
 
-        const container = document.getElementById('display-opts');
-        container.innerHTML = '';
-        list.forEach(item => {
-            const btn = document.createElement('button');
-            btn.className = 'opt-btn';
-            btn.innerText = item;
-            btn.onclick = () => verifyNode(item);
-            container.appendChild(btn);
+        // 카테고리 한글 타이틀 매핑
+        const titleMap = {
+            math_calc: '🧮 수학 연산', math_fraction: '🍰 분수', math_geometry: '📐 도형',
+            eng_word: '🦁 영단어', eng_expression: '💬 영어 표현'
+        };
+        document.getElementById('category-title').innerText = titleMap[category];
+
+        renderQuestion();
+    }
+
+    // 문제 렌더링
+    function renderQuestion() {
+        state.isAnswered = false;
+        document.getElementById('next-btn').classList.add('hidden');
+        
+        const currentQ = state.questions[state.currentIndex];
+        document.getElementById('progress-text').innerText = `${state.currentIndex + 1} / ${state.questions.length}`;
+        document.getElementById('question').innerText = currentQ.q;
+
+        // 정답과 오답 보기를 하나의 배열로 합친 후 무작위 셔플
+        const allOptions = [currentQ.a, ...currentQ.o].sort(() => Math.random() - 0.5);
+        
+        const optionsContainer = document.getElementById('options');
+        optionsContainer.innerHTML = '';
+
+        allOptions.forEach(option => {
+            const button = document.createElement('button');
+            button.className = 'btn btn-option';
+            button.innerText = option;
+            button.onclick = () => checkAnswer(button, option, currentQ.a);
+            optionsContainer.appendChild(button);
         });
     }
 
-    function verifyNode(input) {
-        const alert = document.getElementById('display-alert');
-        const isCorrect = (input === session.activeNode.a);
+    // 정답 체크 및 피드백 처리
+    function checkAnswer(selectedButton, selectedValue, correctValue) {
+        if (state.isAnswered) return; // 중복 선택 방지
+        state.isAnswered = true;
 
-        if (isCorrect) {
-            session.score++;
-            alert.innerText = "✓ 정답입니다.";
-            alert.className = "alert-box success";
+        const optionsContainer = document.getElementById('options');
+        const buttons = optionsContainer.getElementsByTagName('button');
+
+        if (selectedValue === correctValue) {
+            selectedButton.classList.add('correct');
+            state.score++;
         } else {
-            alert.innerText = `✗ 틀렸습니다. (정답: ${session.activeNode.a})`;
-            alert.className = "alert-box error";
+            selectedButton.classList.add('wrong');
+            // 오답일 경우 정답 버튼을 함께 시각화
+            for (let btn of buttons) {
+                if (btn.innerText === correctValue) {
+                    btn.classList.add('correct');
+                }
+            }
         }
 
-        document.querySelectorAll('.opt-btn').forEach(btn => btn.disabled = true);
-        session.ptr++;
-        setTimeout(renderPipeline, 1200);
+        // 전체 버튼 클릭 비활성화 효과
+        for (let btn of buttons) {
+            btn.style.cursor = 'default';
+        }
+
+        document.getElementById('next-btn').classList.remove('hidden');
     }
 
-    function exitToDashboard() {
-        document.getElementById('stage').classList.add('hidden');
-        document.getElementById('dashboard').classList.remove('hidden');
+    // 다음 문제 이동 혹은 결과 화면 진입
+    function nextQuestion() {
+        state.currentIndex++;
+        if (state.currentIndex < state.questions.length) {
+            renderQuestion();
+        } else {
+            showResult();
+        }
     }
+
+    // 결과 화면 출력
+    function showResult() {
+        document.getElementById('quiz-view').classList.add('hidden');
+        document.getElementById('result-view').classList.remove('hidden');
+        document.getElementById('result-score').innerText = `${state.questions.length}문제 중 ${state.score}문제를 맞혔어요!`;
+    }
+
+    // 메인 메뉴 복귀
+    function showMenu() {
+        document.getElementById('result-view').classList.add('hidden');
+        document.getElementById('menu-view').classList.remove('hidden');
+    }
+
+    // DOM 로드 완료 후 실행
+    window.onload = initDataset;
 </script>
 </body>
 </html>
