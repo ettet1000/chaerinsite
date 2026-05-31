@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>초등 3학년 교육과정 단독 구동 엔진</title>
+    <style>
+        :root {
+            --slate-100: #f1f5f9;
+            --slate-800: #1e293b;
+            --blue-600: #2563eb;
+            --purple-600: #9333ea;
+            --emerald-600: #16a34a;
+            --rose-600: #dc2626;
+            --border: #e2e8f0;
+        }
+        body { font-family: system-ui, sans-serif; background-color: var(--slate-100); color: var(--slate-800); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .wrapper { background: #ffffff; border-radius: 12px; padding: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); width: 100%; max-width: 550px; text-align: center; }
+        .nav-title { font-size: 14px; font-weight: bold; margin-top: 20px; text-align: left; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
+        .btn { background: #fff; border: 1px solid var(--border); padding: 14px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 15px; text-align: left; }
+        .btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .hidden { display: none !important; }
+        .screen-header { display: flex; justify-content: space-between; font-size: 13px; color: #64748b; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+        .q-box { font-size: 24px; font-weight: 700; margin: 25px 0; min-height: 70px; display: flex; align-items: center; justify-content: center; }
+        .opt-list { display: flex; flex-direction: column; gap: 8px; }
+        .opt-btn { background: #fff; border: 1px solid var(--border); padding: 15px; border-radius: 6px; font-size: 16px; text-align: left; cursor: pointer; }
+        .opt-btn:hover:not([disabled]) { border-color: #94a3b8; background: #f8fafc; }
+        .alert-box { margin-top: 15px; font-size: 18px; font-weight: bold; min-height: 25px; }
+        .success { color: var(--emerald-600); }
+        .error { color: var(--rose-600); }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div id="dashboard">
+        <h2 style="margin: 0 0 5px 0; text-align: left;">🏫 초등 3학년 교육 과정</h2>
+        <p style="color: #64748b; font-size: 13px; margin: 0 0 25px 0; text-align: left;">로컬 또는 리모트의 `dataset.json` 파일에서 카테고리 자원을 정밀 Fetch합니다.</p>
+        
+        <div class="nav-title" style="color:var(--blue-600)">🔢 3학년 수학</div>
+        <div class="btn-grid">
+            <button class="btn" onclick="loadCategory('math_calc')">덧셈과 뺄셈</button>
+            <button class="btn" onclick="loadCategory('math_fraction')">분수와 소수</button>
+            <button class="btn" onclick="loadCategory('math_geometry')">평면도형</button>
+        </div>
+
+        <div class="nav-title" style="color:var(--purple-600)">🔤 3학년 영어</div>
+        <div class="btn-grid">
+            <button class="btn" onclick="loadCategory('eng_word')">기초 필수 어휘</button>
+            <button class="btn" onclick="loadCategory('eng_expressions')">생활 의사소통</button>
+        </div>
+    </div>
+
+    <div id="stage" class="hidden">
+        <div class="screen-header">
+            <div>카테고리: <span id="current-cat-view" style="font-weight:bold; color:var(--blue-600);"></span></div>
+            <div>진행도: <span id="idx-view">0</span> / <span id="total-view">0</span></div>
+        </div>
+        <div class="q-box" id="display-q">JSON 로딩 데이터 검증 중...</div>
+        <div class="opt-list" id="display-opts"></div>
+        <div class="alert-box" id="display-alert"></div>
+        <button class="btn" style="margin-top: 25px; width:100%; text-align:center; background:#e2e8f0;" onclick="exitToDashboard()">처음 화면으로</button>
+    </div>
+</div>
+
+<script>
+    // 동일 디렉토리 경로 상의 JSON 자원 지향
+    const JSON_DATA_URL = './dataset.json';
+    
+    const session = {
+        pool: [],
+        ptr: 0,
+        activeNode: null,
+        score: 0
+    };
+
+    // 정적 JSON 파일을 다이렉트로 Fetch 파싱하는 핵심 아키텍처
+    async function loadCategory(targetKey) {
+        document.getElementById('dashboard').classList.add('hidden');
+        document.getElementById('stage').classList.remove('hidden');
+
+        document.getElementById('current-cat-view').innerText = targetKey;
+        document.getElementById('display-q').innerText = "JSON 파일 파싱 및 로드 중...";
+        document.getElementById('display-opts').innerHTML = '';
+        document.getElementById('display-alert').innerText = '';
+
+        try {
+            // 외부 서버 통신 없이 동적 로컬 파일 패치 실행
+            const response = await fetch(JSON_DATA_URL);
+            if (!response.ok) throw new Error("JSON 파일 수신 거부 (상태 에러)");
+            
+            const fullData = await response.json();
+            const selectedDataset = fullData[targetKey];
+
+            if (selectedDataset && selectedDataset.length > 0) {
+                // 문제를 무작위로 섞음 (매 판 새로운 출제 확률 확보)
+                session.pool = [...selectedDataset].sort(() => 0.5 - Math.random());
+                session.ptr = 0;
+                session.score = 0;
+                renderPipeline();
+            } else {
+                throw new Error("해당 카테고리에 유효 데이터가 존재하지 않습니다.");
+            }
+        } catch (error) {
+            document.getElementById('display-q').innerHTML = `<span class="error">JSON 로드 실패.<br>대안: 웹 브라우저의 웹 서버 보안(CORS) 제한 또는 파일명을 확인하십시오.</span>`;
+            console.error(error);
+        }
+    }
+
+    function renderPipeline() {
+        document.getElementById('display-alert').innerText = '';
+        document.getElementById('idx-view').innerText = session.ptr + 1;
+        document.getElementById('total-view').innerText = session.pool.length;
+
+        if (session.ptr >= session.pool.length) {
+            document.getElementById('display-q').innerText = `🎉 완료! 최종 점수: ${session.score} / ${session.pool.length}`;
+            document.getElementById('display-opts').innerHTML = '';
+            return;
+        }
+
+        session.activeNode = session.pool[session.ptr];
+        document.getElementById('display-q').innerText = session.activeNode.q;
+
+        // 보기 4지선다 피셔-예이츠 25% 확률 정렬
+        const list = [...session.activeNode.o, session.activeNode.a];
+        for (let i = list.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [list[i], list[j]] = [list[j], list[i]];
+        }
+
+        const container = document.getElementById('display-opts');
+        container.innerHTML = '';
+        list.forEach(item => {
+            const btn = document.createElement('button');
+            btn.className = 'opt-btn';
+            btn.innerText = item;
+            btn.onclick = () => verifyNode(item);
+            container.appendChild(btn);
+        });
+    }
+
+    function verifyNode(input) {
+        const alert = document.getElementById('display-alert');
+        const isCorrect = (input === session.activeNode.a);
+
+        if (isCorrect) {
+            session.score++;
+            alert.innerText = "✓ 정답입니다.";
+            alert.className = "alert-box success";
+        } else {
+            alert.innerText = `✗ 틀렸습니다. (정답: ${session.activeNode.a})`;
+            alert.className = "alert-box error";
+        }
+
+        document.querySelectorAll('.opt-btn').forEach(btn => btn.disabled = true);
+        session.ptr++;
+        setTimeout(renderPipeline, 1200);
+    }
+
+    function exitToDashboard() {
+        document.getElementById('stage').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+    }
+</script>
+</body>
+</html>
