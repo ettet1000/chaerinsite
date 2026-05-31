@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>신나는 3학년 학습 사이트</title>
+    <title>신나는 3학년 학습 사이트 - 화려한 버전</title>
     <style>
         :root {
             --primary-color: #4A90E2;
@@ -23,16 +23,17 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 700px;
             width: 100%;
             background: white;
             padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-radius: 20px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
             text-align: center;
+            position: relative; /* 파티클 효과를 위한 기준점 */
         }
 
-        h1 { color: var(--primary-color); margin-bottom: 30px; }
+        h1 { color: var(--primary-color); margin-bottom: 30px; font-size: 28px; }
 
         /* 메뉴 화면 */
         .menu-grid {
@@ -42,11 +43,11 @@
         }
 
         .btn {
-            padding: 15px 20px;
-            font-size: 16px;
+            padding: 18px 20px;
+            font-size: 18px;
             font-weight: bold;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -54,9 +55,11 @@
         .btn-category {
             background-color: #E2E8F0;
             color: #334155;
+            box-shadow: 0 4px #CBD5E1;
         }
 
-        .btn-category:hover { background-color: var(--primary-color); color: white; }
+        .btn-category:hover { background-color: var(--primary-color); color: white; transform: translateY(-2px); box-shadow: 0 6px #1E40AF;}
+        .btn-category:active { transform: translateY(2px); box-shadow: 0 2px #1E40AF;}
 
         /* 퀴즈 화면 */
         .hidden { display: none !important; }
@@ -64,17 +67,25 @@
         .quiz-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             color: #64748B;
-            font-size: 14px;
+            font-size: 16px;
         }
 
+        .quiz-body { display: flex; align-items: center; justify-content: center; gap: 20px; }
+        .character-box { width: 100px; height: 100px; border-radius: 50%; overflow: hidden; background: #EEF2F6; }
+        .character-box img { width: 100%; height: 100%; object-fit: cover; }
+
         .question-box {
-            font-size: 22px;
+            font-size: 26px;
             font-weight: bold;
             margin: 30px 0;
-            min-height: 60px;
+            min-height: 80px;
             word-break: keep-all;
+            padding: 20px;
+            background: #EEF2F6;
+            border-radius: 12px;
+            position: relative;
         }
 
         .options-box {
@@ -87,14 +98,24 @@
             background-color: #F1F5F9;
             color: #1E293B;
             text-align: left;
-            border: 2px solid transparent;
+            border: 3px solid transparent;
+            transition: all 0.3s;
         }
 
-        .btn-option:hover { background-color: #E2E8F0; }
+        .btn-option:hover:not(.disabled) { background-color: #E2E8F0; transform: translateX(5px); }
         
-        /* 정오답 피드백 스타일 */
-        .btn-option.correct { background-color: #D1FAE5; border-color: var(--success-color); color: #065F46; }
-        .btn-option.wrong { background-color: #FEE2E2; border-color: var(--danger-color); color: #991B1B; }
+        /* 정오답 피드백 스타일 & 애니메이션 */
+        .btn-option.correct { background-color: #D1FAE5; border-color: var(--success-color); color: #065F46; font-size: 20px; transform: scale(1.05); }
+        .btn-option.wrong { background-color: #FEE2E2; border-color: var(--danger-color); color: #991B1B; animation: shake 0.5s; }
+        .btn-option.disabled { cursor: default; }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
 
         .btn-main {
             background-color: var(--primary-color);
@@ -102,13 +123,24 @@
             margin-top: 25px;
             width: 100%;
         }
+
+        /* 파티클 효과 컨테이너 */
+        #celebration-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <canvas id="celebration-canvas" class="hidden"></canvas>
+
     <div id="menu-view">
-        <h1>✏️ 3학년 공부방</h1>
+        <h1>✏️ 신나는 3학년 공부방</h1>
         <div class="menu-grid">
             <button class="btn btn-category" onclick="startQuiz('math_calc')">🧮 수학 연산</button>
             <button class="btn btn-category" onclick="startQuiz('math_fraction')">🍰 분수</button>
@@ -124,7 +156,12 @@
             <span id="progress-text">0 / 0</span>
         </div>
         
-        <div id="question" class="question-box">질문 데이터 로딩 중...</div>
+        <div class="quiz-body">
+            <div id="question" class="question-box">질문 데이터 로딩 중...</div>
+            <div class="character-box">
+                <img id="character-img" src="https://via.placeholder.com/100?text=Wait" alt="Character">
+            </div>
+        </div>
         
         <div id="options" class="options-box">
             </div>
@@ -134,7 +171,7 @@
 
     <div id="result-view" class="hidden">
         <h1>🎉 학습 완료!</h1>
-        <div class="question-box" id="result-score">0점</div>
+        <div class="question-box" id="result-score" style="font-size: 30px;">0점</div>
         <button class="btn btn-main" onclick="showMenu()">처음으로 돌아가기</button>
     </div>
 </div>
@@ -147,30 +184,79 @@
         questions: [],
         currentIndex: 0,
         score: 0,
-        isAnswered: false
+        isAnswered: false,
+        canvas: document.getElementById('celebration-canvas'),
+        ctx: document.getElementById('celebration-canvas').getContext('2d'),
+        particles: []
     };
 
-    // 최초 1회 전체 데이터 로드 (동일 서버 경로의 dataset.json 호출)
+    // 캐릭터 이미지 URL 매핑 (실제 애니메이션 이미지나 GIF URL로 대체 필요)
+    const charImgs = {
+        wait: 'https://via.placeholder.com/100x100?text=Wait',
+        correct: 'https://via.placeholder.com/100x100?text=Clap',
+        wrong: 'https://via.placeholder.com/100x100?text=Fighting'
+    };
+
+    // 최초 1회 전체 데이터 로드
     async function initDataset() {
         try {
             const response = await fetch('./dataset.json');
             if (!response.ok) throw new Error('Network response was not ok');
             state.dataset = await response.json();
+            console.log('데이터셋 로드 완료.');
         } catch (error) {
             console.error('데이터셋 로드 실패:', error);
             alert('서버에서 문제 데이터를 불러오지 못했습니다. dataset.json 위치를 확인하세요.');
         }
     }
 
-    // 퀴즈 시작 함수 (무작위 5문항 추출하여 테스트 세트 생성)
-    function startQuiz(category) {
-        if (!state.dataset || !state.dataset[category]) {
-            alert('데이터가 아직 로드되지 않았거나 유효하지 않은 카테고리입니다.');
-            return;
+    // 파티클 생성 함수 (정답 시 폭죽 효과)
+    function triggerCelebration() {
+        state.canvas.width = state.canvas.offsetWidth;
+        state.canvas.height = state.canvas.offsetHeight;
+        state.canvas.classList.remove('hidden');
+        
+        for (let i = 0; i < 150; i++) {
+            state.particles.push({
+                x: state.canvas.width / 2,
+                y: state.canvas.height / 2,
+                angle: Math.random() * Math.PI * 2,
+                speed: Math.random() * 8 + 2,
+                radius: Math.random() * 4 + 1,
+                color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+                life: Math.random() * 60 + 40
+            });
         }
+        animateParticles();
+        setTimeout(() => state.canvas.classList.add('hidden'), 2000); // 2초 후 숨김
+    }
+
+    // 파티클 애니메이션 루프
+    function animateParticles() {
+        if (state.particles.length === 0) return;
+        state.ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
+
+        for (let i = state.particles.length - 1; i >= 0; i--) {
+            const p = state.particles[i];
+            p.x += Math.cos(p.angle) * p.speed;
+            p.y += Math.sin(p.angle) * p.speed + 1; // 중력 효과
+            p.life--;
+
+            state.ctx.beginPath();
+            state.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            state.ctx.fillStyle = p.color;
+            state.ctx.fill();
+
+            if (p.life <= 0) state.particles.splice(i, 1);
+        }
+        requestAnimationFrame(animateParticles);
+    }
+
+    // 퀴즈 시작 함수
+    function startQuiz(category) {
+        if (!state.dataset || !state.dataset[category]) { alert('데이터 로드 실패'); return; }
 
         state.currentCategory = category;
-        // 원본 배열 복사 후 셔플하여 상위 5개만 추출 (요구사항 및 문제 수에 따라 조절 가능)
         const rawQuestions = [...state.dataset[category]];
         state.questions = rawQuestions.sort(() => Math.random() - 0.5).slice(0, 5); 
         
@@ -181,11 +267,7 @@
         document.getElementById('result-view').classList.add('hidden');
         document.getElementById('quiz-view').classList.remove('hidden');
 
-        // 카테고리 한글 타이틀 매핑
-        const titleMap = {
-            math_calc: '🧮 수학 연산', math_fraction: '🍰 분수', math_geometry: '📐 도형',
-            eng_word: '🦁 영단어', eng_expression: '💬 영어 표현'
-        };
+        const titleMap = { math_calc: '🧮 수학 연산', math_fraction: '🍰 분수', math_geometry: '📐 도형', eng_word: '🦁 영단어', eng_expression: '💬 영어 표현' };
         document.getElementById('category-title').innerText = titleMap[category];
 
         renderQuestion();
@@ -195,14 +277,13 @@
     function renderQuestion() {
         state.isAnswered = false;
         document.getElementById('next-btn').classList.add('hidden');
+        document.getElementById('character-img').src = charImgs.wait; // 대기 이미지로 리셋
         
         const currentQ = state.questions[state.currentIndex];
         document.getElementById('progress-text').innerText = `${state.currentIndex + 1} / ${state.questions.length}`;
         document.getElementById('question').innerText = currentQ.q;
 
-        // 정답과 오답 보기를 하나의 배열로 합친 후 무작위 셔플
         const allOptions = [currentQ.a, ...currentQ.o].sort(() => Math.random() - 0.5);
-        
         const optionsContainer = document.getElementById('options');
         optionsContainer.innerHTML = '';
 
@@ -215,20 +296,26 @@
         });
     }
 
-    // 정답 체크 및 피드백 처리
+    // 정답 체크 및 화려한 피드백 처리
     function checkAnswer(selectedButton, selectedValue, correctValue) {
-        if (state.isAnswered) return; // 중복 선택 방지
+        if (state.isAnswered) return;
         state.isAnswered = true;
 
         const optionsContainer = document.getElementById('options');
         const buttons = optionsContainer.getElementsByTagName('button');
 
+        // 전체 버튼 선택 비활성화
+        for (let btn of buttons) { btn.classList.add('disabled'); }
+
         if (selectedValue === correctValue) {
             selectedButton.classList.add('correct');
             state.score++;
+            document.getElementById('character-img').src = charImgs.correct; // Clap 애니메이션
+            triggerCelebration(); // 화려한 파티클 효과 작동
         } else {
-            selectedButton.classList.add('wrong');
-            // 오답일 경우 정답 버튼을 함께 시각화
+            selectedButton.classList.add('wrong'); // Shake 애니메이션 작동
+            document.getElementById('character-img').src = charImgs.wrong; // Fighting 애니메이션
+            // 정답 버튼 시각화
             for (let btn of buttons) {
                 if (btn.innerText === correctValue) {
                     btn.classList.add('correct');
@@ -236,38 +323,25 @@
             }
         }
 
-        // 전체 버튼 클릭 비활성화 효과
-        for (let btn of buttons) {
-            btn.style.cursor = 'default';
-        }
-
         document.getElementById('next-btn').classList.remove('hidden');
     }
 
-    // 다음 문제 이동 혹은 결과 화면 진입
     function nextQuestion() {
         state.currentIndex++;
-        if (state.currentIndex < state.questions.length) {
-            renderQuestion();
-        } else {
-            showResult();
-        }
+        if (state.currentIndex < state.questions.length) { renderQuestion(); } else { showResult(); }
     }
 
-    // 결과 화면 출력
     function showResult() {
         document.getElementById('quiz-view').classList.add('hidden');
         document.getElementById('result-view').classList.remove('hidden');
         document.getElementById('result-score').innerText = `${state.questions.length}문제 중 ${state.score}문제를 맞혔어요!`;
     }
 
-    // 메인 메뉴 복귀
     function showMenu() {
         document.getElementById('result-view').classList.add('hidden');
         document.getElementById('menu-view').classList.remove('hidden');
     }
 
-    // DOM 로드 완료 후 실행
     window.onload = initDataset;
 </script>
 </body>
